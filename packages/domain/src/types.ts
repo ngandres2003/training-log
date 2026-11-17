@@ -36,7 +36,7 @@ export interface Settings extends SyncFields {
 
 export type TrackingType = 'weight_reps' | 'reps' | 'time'
 
-export type Equipment = 'barbell' | 'dumbbell' | 'machine' | 'cable' | 'bodyweight'
+export type Equipment = 'barbell' | 'dumbbell' | 'machine' | 'cable' | 'bodyweight' | 'other'
 
 /** Ids from the fixed muscle list in `muscles.ts`. */
 export type MuscleId = string

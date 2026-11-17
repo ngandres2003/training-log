@@ -15,6 +15,7 @@
     "@fontsource/archivo": "^5.3.0",
     "@training-log/contract": "workspace:*",
     "@training-log/domain": "workspace:*",
+    "better-auth": "^1.7.25",
     "dexie": "^4.4.7",
     "dexie-react-hooks": "^4.4.0",
     "react": "^19.3.1",
