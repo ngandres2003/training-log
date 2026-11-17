@@ -1,39 +1,57 @@
 @import 'tailwindcss';
+@import '@fontsource/anton/400.css';
+@import '@fontsource/archivo/400.css';
+@import '@fontsource/archivo/500.css';
+@import '@fontsource/archivo/700.css';
 
-/* Theme tokens (KTD14). Dark is the default; designs from docs/designs restyle these values. */
+/*
+ * Theme tokens (KTD14) from docs/designs/2026-11-17-v5-v6-lienzo.md.
+ * Dark is the default. Fonts are bundled (not Google Fonts) so they work offline.
+ */
 :root {
-  --background: #0b0d10;
-  --foreground: #f2f4f7;
-  --surface: #15181d;
-  --muted: #8a93a3;
-  --primary: #4f8cff;
-  --accent: #ffb547;
-  --success: #2fbf71;
-  --danger: #ef5350;
+  --sol: #f6c026; /* primary action, timer, checked set, superset border */
+  --atardecer: #f08a24; /* personal records only */
+  --arena: #efe6d2; /* primary text, completed values */
+  --polvo: #a39e8f; /* secondary text, previous and prefilled values */
+  --hierro: #0e0e0c; /* screen background */
+  --asfalto: #1c1b18; /* cards and slides */
+  --concreto: #2e2c27; /* borders, inputs, unchecked */
+  --oceano: #3fa7d6; /* data visualisation */
+  --borde-fuerte: #3a3832;
+  --borde-activo: #4a4740;
+  --fondo-superserie: #12120f;
   color-scheme: dark;
 }
 
+/* Light variant: provisional until designed. */
 :root[data-theme='light'] {
-  --background: #f7f8fa;
-  --foreground: #12151a;
-  --surface: #ffffff;
-  --muted: #5d6675;
+  --arena: #1c1b18;
+  --polvo: #5d5a52;
+  --hierro: #f7f4ec;
+  --asfalto: #ffffff;
+  --concreto: #e4dfd2;
   color-scheme: light;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-surface: var(--surface);
-  --color-muted: var(--muted);
-  --color-primary: var(--primary);
-  --color-accent: var(--accent);
-  --color-success: var(--success);
-  --color-danger: var(--danger);
+  --color-sol: var(--sol);
+  --color-atardecer: var(--atardecer);
+  --color-arena: var(--arena);
+  --color-polvo: var(--polvo);
+  --color-hierro: var(--hierro);
+  --color-asfalto: var(--asfalto);
+  --color-concreto: var(--concreto);
+  --color-oceano: var(--oceano);
+  --color-borde-fuerte: var(--borde-fuerte);
+  --color-borde-activo: var(--borde-activo);
+  --color-fondo-superserie: var(--fondo-superserie);
+  --font-display: 'Anton', sans-serif;
+  --font-sans: 'Archivo', system-ui, sans-serif;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--hierro);
+  color: var(--arena);
+  font-family: var(--font-sans);
   font-variant-numeric: tabular-nums;
 }
