@@ -195,3 +195,5 @@ export const customExercises = pgTable(
     check('custom_exercises_tracking_type_check', sql`${t.trackingType} in ('weight_reps', 'reps', 'time')`),
   ],
 )
+
+export * from './auth-schema.js'
