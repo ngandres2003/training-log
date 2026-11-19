@@ -5,6 +5,7 @@ import { requireSession, sessionOf } from './auth/require-session.js'
 import { createDb, type Db } from './db/client.js'
 import { createSyncRouter } from './sync/router.js'
 import { createUploadsRouter } from './uploads/router.js'
+import { createAccountRouter } from './account/router.js'
 
 export { requireSession, sessionOf }
 
@@ -47,6 +48,7 @@ export function createApp(deps: AppDeps = {}): Express {
 
   app.use('/api/sync', createSyncRouter({ getDb, requireSession: auth }))
   app.use('/api/uploads', createUploadsRouter({ getAuth }))
+  app.use('/api/account', createAccountRouter({ getDb, getAuth, requireSession: auth }))
 
   app.use('/api', (_req, res) => {
     res.status(404).json({ error: 'not_found' })

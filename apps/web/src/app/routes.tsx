@@ -1,21 +1,28 @@
 import type { RouteObject } from 'react-router'
+import { exercisesRoutes } from '../features/exercises/routes'
+import { profileRoutes } from '../features/profile/routes'
+import { routinesRoutes } from '../features/routines/routes'
 import HistorialPlaceholder from './placeholders/HistorialPlaceholder'
-import InicioPlaceholder from './placeholders/InicioPlaceholder'
-import PerfilPlaceholder from './placeholders/PerfilPlaceholder'
 import ProgresoPlaceholder from './placeholders/ProgresoPlaceholder'
 
+/** Prefixes a feature's routes with its tab path ('' for Inicio). */
+function underTab(tab: string, routes: RouteObject[]): RouteObject[] {
+  if (!tab) return routes
+  return routes.map((route) =>
+    route.index ? { ...route, index: undefined, path: tab } : { ...route, path: `${tab}/${route.path}` },
+  ) as RouteObject[]
+}
+
 /**
- * Pages rendered inside the signed-in layout (tab bar + sync indicator). A feature unit
- * registers its screens here: replace the tab's placeholder import with its page (and delete
- * the placeholder file), and add child views next to it, e.g.
- *   { path: 'rutinas/:routineId', element: <RoutineDetail /> }       // V2 under Inicio
- *   { path: 'historial/sesiones/:workoutId', element: <SessionDetail /> }
- * Every page starts with `<PageHeader title=… />` so the sync indicator stays in its header.
- * The active workout is not a route: it is a global layer (see ./active-workout-slot).
+ * Pages rendered inside the signed-in layout (tab bar + sync indicator). Each feature exports
+ * its routes relative to its tab; they are mounted here. Every page starts with
+ * `<PageHeader title=… />` so the sync indicator stays in its header. The active workout is not
+ * a route: it is a global layer (see ./active-workout-slot).
  */
 export const tabRoutes: RouteObject[] = [
-  { index: true, element: <InicioPlaceholder /> },
+  ...underTab('', routinesRoutes),
   { path: 'historial', element: <HistorialPlaceholder /> },
   { path: 'progreso', element: <ProgresoPlaceholder /> },
-  { path: 'perfil', element: <PerfilPlaceholder /> },
+  ...underTab('perfil', profileRoutes),
+  ...underTab('perfil', exercisesRoutes),
 ]

@@ -2,6 +2,7 @@ import { createContext, useContext, useMemo, type ReactNode } from 'react'
 import { syncEngine, type SyncEngine } from '../data/sync/engine'
 import { startSyncTriggers } from '../data/sync/triggers'
 import { authApi, type AuthApi } from '../features/auth/auth-client'
+import { signOut } from '../features/profile/sign-out'
 
 /** Services the app shell uses; injectable so the shell is tested without a network. */
 export interface ShellDeps {
@@ -11,7 +12,6 @@ export interface ShellDeps {
   startSync: (engine: SyncEngine) => () => void
   /**
    * Sign-out request from the "another account" block after re-auth.
-   * TODO(U15): placeholder. U15 owns the sign-out flow and replaces this default.
    */
   onSignOutRequested: () => void
 }
@@ -20,10 +20,7 @@ const defaultDeps: ShellDeps = {
   engine: syncEngine,
   authApi,
   startSync: (engine) => startSyncTriggers(engine),
-  onSignOutRequested: () => {
-    // TODO(U15): placeholder until the sign-out flow exists.
-    console.warn('Sign-out requested, but sign-out is not implemented yet (U15).')
-  },
+  onSignOutRequested: () => void signOut(),
 }
 
 const ShellContext = createContext<ShellDeps>(defaultDeps)
