@@ -110,12 +110,12 @@ async function consumeEmailSend(db: Db, email: string): Promise<number | null> {
 let defaultAuth: Auth | undefined
 
 /** The production instance, built on first use from the environment. */
-export function getDefaultAuth(): Auth {
+export function getDefaultAuth(db?: Db): Auth {
   if (!defaultAuth) {
     const apiKey = process.env.RESEND_API_KEY
     const from = process.env.EMAIL_FROM
     if (!apiKey || !from) throw new Error('RESEND_API_KEY and EMAIL_FROM must be set')
-    defaultAuth = createAuth({ db: createDb().db, mailer: createResendMailer({ apiKey, from }) })
+    defaultAuth = createAuth({ db: db ?? createDb().db, mailer: createResendMailer({ apiKey, from }) })
   }
   return defaultAuth
 }

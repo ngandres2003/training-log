@@ -2,17 +2,25 @@ import { toNodeHandler } from 'better-auth/node'
 import express, { type Express, type RequestHandler } from 'express'
 import { getDefaultAuth, type Auth } from './auth/auth.js'
 import { requireSession, sessionOf } from './auth/require-session.js'
+import { createDb, type Db } from './db/client.js'
+import { createSyncRouter } from './sync/router.js'
+import { createUploadsRouter } from './uploads/router.js'
 
 export { requireSession, sessionOf }
 
 export interface AppDeps {
   /** Defaults to the production instance, built from the environment on first auth request. */
   auth?: Auth
+  /** Defaults to Drizzle on Neon from `DATABASE_URL`, built on first sync request. */
+  db?: Db
 }
 
 export function createApp(deps: AppDeps = {}): Express {
   const app = express()
-  const getAuth = () => deps.auth ?? getDefaultAuth()
+  let defaultDb: Db | undefined
+  const getDb = () => deps.db ?? (defaultDb ??= createDb().db)
+  // Auth and sync share one Neon pool.
+  const getAuth = () => deps.auth ?? getDefaultAuth(getDb())
 
   app.get('/api/health', (_req, res) => {
     res.json({ ok: true })
@@ -36,6 +44,9 @@ export function createApp(deps: AppDeps = {}): Express {
     const { user } = sessionOf(res)
     res.json({ user: { id: user.id, email: user.email } })
   })
+
+  app.use('/api/sync', createSyncRouter({ getDb, requireSession: auth }))
+  app.use('/api/uploads', createUploadsRouter({ getAuth }))
 
   app.use('/api', (_req, res) => {
     res.status(404).json({ error: 'not_found' })
