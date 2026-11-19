@@ -1,0 +1,24 @@
+import type { ButtonHTMLAttributes } from 'react'
+
+export type ButtonVariant = 'primary' | 'secondary' | 'ghost'
+
+const VARIANTS: Record<ButtonVariant, string> = {
+  primary: 'bg-sol text-hierro font-bold',
+  secondary: 'border border-concreto bg-asfalto text-arena font-medium',
+  ghost: 'text-polvo font-medium',
+}
+
+export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: ButtonVariant
+}
+
+/** Base button: at least 48 px tall and wide (KTD16). */
+export function Button({ variant = 'primary', className = '', type = 'button', ...props }: ButtonProps) {
+  return (
+    <button
+      type={type}
+      className={`inline-flex min-h-12 min-w-12 items-center justify-center gap-2 rounded-lg px-4 disabled:opacity-50 ${VARIANTS[variant]} ${className}`}
+      {...props}
+    />
+  )
+}

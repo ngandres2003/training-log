@@ -1,11 +1,23 @@
-import { createBrowserRouter } from 'react-router'
+import { createBrowserRouter, Navigate, Outlet, type RouteObject } from 'react-router'
+import { AppLayout } from './AppLayout'
+import { AuthGate } from './auth-gate'
+import { tabRoutes } from './routes'
 
-function Home() {
-  return (
-    <main className="mx-auto min-h-dvh max-w-[480px] bg-hierro px-4 py-6 text-arena">
-      <h1 className="font-display text-3xl uppercase">Training Log</h1>
-    </main>
-  )
+/** Route tree: auth gate (VA / V0) → signed-in layout → tab pages from ./routes. */
+export const appRoutes: RouteObject[] = [
+  {
+    element: (
+      <AuthGate>
+        <Outlet />
+      </AuthGate>
+    ),
+    children: [
+      { element: <AppLayout />, children: tabRoutes },
+      { path: '*', element: <Navigate to="/" replace /> },
+    ],
+  },
+]
+
+export function createAppRouter() {
+  return createBrowserRouter(appRoutes)
 }
-
-export const router = createBrowserRouter([{ path: '*', element: <Home /> }])
