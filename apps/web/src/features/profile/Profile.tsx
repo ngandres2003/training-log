@@ -4,6 +4,7 @@ import { Link, useLocation } from 'react-router'
 import { PageHeader } from '../../app/PageHeader'
 import { AccountSection } from './AccountSection'
 import { DataTools } from './DataTools'
+import { InviteSection } from './InviteSection'
 import { deleteAllMyData } from './delete-all'
 import { Section } from './Section'
 import { SettingsForm } from './SettingsForm'
@@ -39,6 +40,7 @@ export function Profile({
       <PageHeader title="Perfil" />
       <div className="flex flex-col gap-4 pb-6">
         <AccountSection onSignOut={onSignOut} />
+        <InviteSection />
         <SyncDetail />
         <SettingsForm />
         <DataTools onDeleteAll={onDeleteAll} />

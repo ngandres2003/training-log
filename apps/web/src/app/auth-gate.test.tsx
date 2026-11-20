@@ -9,7 +9,7 @@ import { createSyncEngine, type SessionCheck } from '../data/sync/engine'
 import { createSyncStatusStore } from '../data/sync/status'
 import { startSyncTriggers } from '../data/sync/triggers'
 import { setLastKnownUser } from '../data/syncMeta'
-import type { AuthApi, SendResult, VerifyResult } from '../features/auth/auth-client'
+import { fakeAuthApi } from '../features/auth/test-fixtures'
 import { renderApp } from './test-utils'
 
 const ANA = { id: '0190f0c0-0000-7000-8000-00000000000a', email: 'ana@example.com' }
@@ -17,17 +17,6 @@ const BEA = { id: '0190f0c0-0000-7000-8000-00000000000b', email: 'bea@example.co
 
 function setOnline(value: boolean) {
   Object.defineProperty(navigator, 'onLine', { configurable: true, get: () => value })
-}
-
-function fakeAuthApi(user = ANA): AuthApi {
-  return {
-    async sendCode(): Promise<SendResult> {
-      return { ok: true }
-    },
-    async verifyCode(): Promise<VerifyResult> {
-      return { ok: true, user }
-    },
-  }
 }
 
 /** A real engine whose network never answers; the test controls the session check. */
@@ -51,8 +40,8 @@ async function signedInAndOnboarded(user = ANA) {
   await saveSettings({ onboardedAt: '2026-11-01T10:00:00.000Z' })
 }
 
-async function enterCode(user: ReturnType<typeof userEvent.setup>) {
-  await user.type(await screen.findByLabelText('Código de 6 dígitos'), '123456')
+async function enterPassword(user: ReturnType<typeof userEvent.setup>) {
+  await user.type(await screen.findByLabelText('Contraseña'), 'secreto-largo')
   await user.click(screen.getByRole('button', { name: 'Entrar' }))
 }
 
@@ -69,8 +58,8 @@ afterEach(() => {
 describe('auth gate', () => {
   it('shows VA when the device has no stored user', async () => {
     const { engine } = offlineEngine()
-    renderApp({ engine, authApi: fakeAuthApi(), startSync: () => () => {} })
-    expect(await screen.findByRole('button', { name: 'Enviar código' })).toBeInTheDocument()
+    renderApp({ engine, authApi: fakeAuthApi(ANA), startSync: () => () => {} })
+    expect(await screen.findByLabelText('Contraseña')).toBeInTheDocument()
     expect(screen.queryByRole('navigation', { name: 'Pestañas' })).not.toBeInTheDocument()
   })
 
@@ -78,7 +67,7 @@ describe('auth gate', () => {
     setOnline(false)
     await signedInAndOnboarded()
     const { engine, fetch, checkSession } = offlineEngine()
-    renderApp({ engine, authApi: fakeAuthApi(), startSync: (e) => startSyncTriggers(e) })
+    renderApp({ engine, authApi: fakeAuthApi(ANA), startSync: (e) => startSyncTriggers(e) })
 
     expect(await screen.findByRole('heading', { name: 'Inicio' })).toBeInTheDocument()
     // The onboarding settings write is still in the outbox: 1 pending change.
@@ -88,14 +77,13 @@ describe('auth gate', () => {
     expect(checkSession).not.toHaveBeenCalled()
   })
 
-  it('first open: VA, code, then onboarding (F1)', async () => {
+  it('first open: VA, password, then onboarding (F1)', async () => {
     const user = userEvent.setup()
     const { engine } = offlineEngine()
-    renderApp({ engine, authApi: fakeAuthApi(), startSync: () => () => {} })
+    renderApp({ engine, authApi: fakeAuthApi(ANA), startSync: () => () => {} })
 
     await user.type(await screen.findByLabelText('Email'), 'ana@example.com')
-    await user.click(screen.getByRole('button', { name: 'Enviar código' }))
-    await enterCode(user)
+    await enterPassword(user)
 
     expect(await screen.findByRole('heading', { name: /unidades/i })).toBeInTheDocument()
   })
@@ -104,7 +92,7 @@ describe('auth gate', () => {
     const user = userEvent.setup()
     await signedInAndOnboarded()
     const { engine } = offlineEngine()
-    const { router } = renderApp({ engine, authApi: fakeAuthApi(), startSync: () => () => {} })
+    const { router } = renderApp({ engine, authApi: fakeAuthApi(ANA), startSync: () => () => {} })
 
     await user.click(await screen.findByRole('link', { name: /^Sincronización/ }))
     expect(await screen.findByRole('heading', { name: 'Perfil' })).toBeInTheDocument()
@@ -113,14 +101,14 @@ describe('auth gate', () => {
 })
 
 describe('authExpired', () => {
-  it('shows the banner, keeps Inicio usable, and a new code returns status to pendiente', async () => {
+  it('shows the banner, keeps Inicio usable, and the password returns status to pendiente', async () => {
     const user = userEvent.setup()
     await signedInAndOnboarded()
     let session: SessionCheck = { kind: 'none' }
     const { engine } = offlineEngine(() => session)
     renderApp({
       engine,
-      authApi: fakeAuthApi(),
+      authApi: fakeAuthApi(ANA),
       startSync: (e) => {
         void e.sync()
         return () => {}
@@ -138,7 +126,7 @@ describe('authExpired', () => {
 
     session = { kind: 'ok', userId: ANA.id }
     await user.click(screen.getByRole('button', { name: 'Volver a entrar' }))
-    await enterCode(user)
+    await enterPassword(user)
 
     await waitFor(() => expect(engine.status.getSnapshot().status).toBe('pending'))
     expect(screen.queryByRole('region', { name: 'Sesión caducada' })).not.toBeInTheDocument()
@@ -147,7 +135,7 @@ describe('authExpired', () => {
     )
   })
 
-  it('a code for another account blocks the app and offers to sign out', async () => {
+  it('a sign-in to another account blocks the app and offers to sign out', async () => {
     const user = userEvent.setup()
     await signedInAndOnboarded()
     const { engine } = offlineEngine(() => ({ kind: 'none' }))
@@ -163,7 +151,7 @@ describe('authExpired', () => {
     })
 
     await user.click(await screen.findByRole('button', { name: 'Volver a entrar' }))
-    await enterCode(user)
+    await enterPassword(user)
 
     const dialog = await screen.findByRole('alertdialog')
     expect(dialog).toHaveTextContent('otra cuenta')
@@ -177,7 +165,7 @@ describe('update toast', () => {
   it('appears when the server reports this client outdated', async () => {
     await signedInAndOnboarded()
     const { engine } = offlineEngine()
-    renderApp({ engine, authApi: fakeAuthApi(), startSync: () => () => {} })
+    renderApp({ engine, authApi: fakeAuthApi(ANA), startSync: () => () => {} })
     await screen.findByRole('heading', { name: 'Inicio' })
     expect(screen.queryByRole('button', { name: 'Actualizar' })).not.toBeInTheDocument()
 

@@ -1,9 +1,9 @@
-import { useEffect, useId, useState, type FormEvent } from 'react'
+import { useEffect, useState } from 'react'
 import type { LastKnownUser } from '../../data/db'
 import { getLastKnownUser } from '../../data/syncMeta'
 import { authApi, rememberUser, type AuthApi } from './auth-client'
-import { CodeStep } from './CodeStep'
-import { formatClock, useCountdown, useOnline } from './hooks'
+import { useOnline } from './hooks'
+import { PasswordForm } from './PasswordForm'
 
 export interface AccessScreenProps {
   onSignedIn: (user: LastKnownUser) => void
@@ -11,18 +11,12 @@ export interface AccessScreenProps {
 }
 
 /**
- * VA · Acceso: email → 6-digit code (R3). States: normal, sending, code entry, wrong or
- * expired code, too many attempts with a countdown, and offline on first open.
+ * VA · Acceso: email + password. Accounts are created only from an invite link
+ * (`/invitacion/<token>`); a forgotten password is a new link from whoever invited you.
  */
 export function AccessScreen({ onSignedIn, api = authApi }: AccessScreenProps) {
-  const emailId = useId()
   const online = useOnline()
   const [hasKnownUser, setHasKnownUser] = useState(false)
-  const [email, setEmail] = useState('')
-  const [step, setStep] = useState<'email' | 'code'>('email')
-  const [sending, setSending] = useState(false)
-  const [sendFailed, setSendFailed] = useState(false)
-  const [waitIn, startWait] = useCountdown()
 
   useEffect(() => {
     let alive = true
@@ -32,31 +26,13 @@ export function AccessScreen({ onSignedIn, api = authApi }: AccessScreenProps) {
     }
   }, [])
 
-  async function sendCode(e: FormEvent) {
-    e.preventDefault()
-    const normalized = email.trim().toLowerCase()
-    if (!normalized || sending) return
-    setSending(true)
-    setSendFailed(false)
-    const res = await api.sendCode(normalized)
-    setSending(false)
-    if (res.ok) {
-      setEmail(normalized)
-      setStep('code')
-    } else if (res.reason === 'rate-limited') {
-      startWait(res.retryAfterSec)
-    } else {
-      setSendFailed(true)
-    }
-  }
-
-  async function verified(user: LastKnownUser) {
+  async function signedIn(user: LastKnownUser) {
     await rememberUser(user)
     onSignedIn(user)
   }
 
   const offlineText = hasKnownUser
-    ? 'Sin conexión. Conéctate para recibir el código.'
+    ? 'Sin conexión. Conéctate para entrar.'
     : 'Necesitas conexión para entrar la primera vez'
 
   return (
@@ -72,43 +48,8 @@ export function AccessScreen({ onSignedIn, api = authApi }: AccessScreenProps) {
         </p>
       )}
 
-      {step === 'email' ? (
-        <form onSubmit={sendCode} className="flex flex-col gap-4">
-          <label htmlFor={emailId} className="text-sm text-polvo">
-            Email
-          </label>
-          <input
-            id={emailId}
-            type="email"
-            required
-            autoComplete="email"
-            inputMode="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="tu@email.com"
-            className="min-h-12 rounded-lg border border-concreto bg-asfalto px-4 text-arena placeholder:text-polvo"
-          />
-          {waitIn > 0 && (
-            <p role="alert" className="text-sm text-atardecer">
-              Demasiados intentos. Podrás pedir otro código en {formatClock(waitIn)}
-            </p>
-          )}
-          {sendFailed && waitIn === 0 && (
-            <p role="alert" className="text-sm text-atardecer">
-              No pudimos enviar el código. Inténtalo de nuevo.
-            </p>
-          )}
-          <button
-            type="submit"
-            disabled={!online || sending || waitIn > 0}
-            className="min-h-12 rounded-lg bg-sol font-bold text-tinta disabled:opacity-50"
-          >
-            {sending ? 'Enviando…' : 'Enviar código'}
-          </button>
-        </form>
-      ) : (
-        <CodeStep email={email} api={api} onVerified={verified} onChangeEmail={() => setStep('email')} />
-      )}
+      <PasswordForm api={api} onSignedIn={signedIn} />
+      <p className="text-sm text-polvo">¿Aún no tienes cuenta? Se entra con una invitación.</p>
     </main>
   )
 }

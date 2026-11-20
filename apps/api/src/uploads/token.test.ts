@@ -4,23 +4,21 @@ import request from 'supertest'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { createApp } from '../app.js'
 import { createAuth, type Auth } from '../auth/auth.js'
-import { createTestMailer, type TestMailer } from '../auth/mailer.js'
+import { signInForTest, TEST_BASE_URL, TEST_SECRET } from '../auth/test-helpers.js'
 import { createTestDb, type TestDb } from '../db/test-db.js'
 import { createUploadsRouter } from './router.js'
 
-const BASE_URL = 'http://localhost:3000'
-const SECRET = 'test-secret-0123456789-abcdefghijklmnop'
+const BASE_URL = TEST_BASE_URL
+const SECRET = TEST_SECRET
 const FAKE_BLOB_TOKEN = 'vercel_blob_rw_teststore123_fakesecretvalue'
 const TWO_MB = 2 * 1024 * 1024
 
 let t: TestDb
-let mailer: TestMailer
 let auth: Auth
 
 beforeEach(async () => {
   t = await createTestDb()
-  mailer = createTestMailer()
-  auth = createAuth({ db: t.db, mailer, secret: SECRET, baseURL: BASE_URL })
+  auth = createAuth({ db: t.db, secret: SECRET, baseURL: BASE_URL })
 })
 
 afterEach(async () => {
@@ -34,22 +32,8 @@ function uploadsApp() {
   return app
 }
 
-async function signIn(email: string): Promise<{ id: string; cookie: string }> {
-  const app = createApp({ auth })
-  await request(app)
-    .post('/api/auth/email-otp/send-verification-otp')
-    .set('Origin', BASE_URL)
-    .send({ email, type: 'sign-in' })
-    .expect(200)
-  const res = await request(app)
-    .post('/api/auth/sign-in/email-otp')
-    .set('Origin', BASE_URL)
-    .send({ email, otp: mailer.lastCodeFor(email) })
-    .expect(200)
-  const raw = res.headers['set-cookie'] as unknown as string[]
-  const cookie = raw.map((c) => c.split(';')[0]).join('; ')
-  const me = await request(app).get('/api/me').set('Cookie', cookie).expect(200)
-  return { id: (me.body as { user: { id: string } }).user.id, cookie }
+function signIn(email: string): Promise<{ id: string; cookie: string }> {
+  return signInForTest(createApp({ auth, db: t.db }), t.db, email)
 }
 
 describe('POST /api/uploads/token', () => {
