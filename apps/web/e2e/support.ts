@@ -162,12 +162,13 @@ export function activeWorkout(page: Page) {
   return page.getByRole('dialog', { name: 'Entreno activo' })
 }
 
-/** ✓ on a set row of V5, then skips the rest sheet (V6) that every ✓ opens. */
+/**
+ * ✓ on a set row of V5. Rest is per exercise and the e2e routines set none ("Sin descanso"), so
+ * no rest sheet (V6) opens and V5 stays visible.
+ */
 export async function completeRow(page: Page, row: string): Promise<void> {
   const check = page.getByRole('button', { name: `Completar fila ${row}` })
   await check.click()
-  // V6 covers V5 (and hides it from assistive tech) until the rest is skipped.
-  await page.getByRole('button', { name: 'Omitir descanso' }).click()
   await expect(activeWorkout(page)).toBeVisible()
   await expect(check).toHaveAttribute('aria-pressed', 'true')
 }

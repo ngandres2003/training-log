@@ -24,7 +24,7 @@ export function TodaySuggestion({ routine, onStart }: { routine: Routine; onStar
         type="button"
         onClick={onStart}
         aria-label={`Iniciar ${routine.name}`}
-        className="inline-flex min-h-12 items-center gap-1 rounded-lg bg-sol px-4 font-bold text-hierro"
+        className="inline-flex min-h-12 items-center gap-1 rounded-lg bg-sol px-4 font-bold text-tinta"
       >
         <Play aria-hidden="true" className="size-4 fill-current" />
         Iniciar

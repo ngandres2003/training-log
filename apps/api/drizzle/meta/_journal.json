@@ -15,6 +15,13 @@
       "when": 1794926881829,
       "tag": "0001_auth",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1795185718817,
+      "tag": "0002_rest_per_workout_exercise",
+      "breakpoints": true
     }
   ]
 }

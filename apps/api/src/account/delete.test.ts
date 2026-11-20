@@ -1,3 +1,4 @@
+import { CONTRACT_VERSION } from '@training-log/contract'
 import { eq } from 'drizzle-orm'
 import express from 'express'
 import request from 'supertest'
@@ -105,7 +106,6 @@ function rows() {
         displayName: 'X',
         unit: 'kg',
         weeklyGoal: 3,
-        defaultRestSec: 90,
         weekStart: 'monday',
         theme: 'dark',
         preloadPrevious: true,
@@ -122,7 +122,7 @@ function push(device: Device) {
   return request(app)
     .post('/api/sync/push')
     .set('Cookie', device.cookie)
-    .send({ contractVersion: 1, changes: rows() })
+    .send({ contractVersion: CONTRACT_VERSION, changes: rows() })
 }
 
 async function countRows(userId: string): Promise<number> {

@@ -1,11 +1,11 @@
-import type { PullResponse, PushResponse } from '@training-log/contract'
+import { CONTRACT_VERSION, type PullResponse, type PushResponse } from '@training-log/contract'
 import { eq } from 'drizzle-orm'
 import request from 'supertest'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { createApp } from '../app.js'
 import { createAuth } from '../auth/auth.js'
 import { createTestMailer, type TestMailer } from '../auth/mailer.js'
-import { folders, routines, settings, syncCounters } from '../db/schema.js'
+import { folders, routines, settings, syncCounters, workoutExercises } from '../db/schema.js'
 import { createTestDb, type TestDb } from '../db/test-db.js'
 
 const BASE_URL = 'http://localhost:3000'
@@ -84,7 +84,6 @@ function settingsRow(id: string, patch: Record<string, unknown> = {}) {
     displayName: 'Ana',
     unit: 'kg',
     weeklyGoal: 3,
-    defaultRestSec: 90,
     weekStart: 'monday',
     theme: 'dark',
     preloadPrevious: true,
@@ -96,9 +95,24 @@ function settingsRow(id: string, patch: Record<string, unknown> = {}) {
   }
 }
 
+function workoutExercise(id: string, patch: Record<string, unknown> = {}) {
+  return {
+    id,
+    deletedAt: null,
+    workoutId: uuid(),
+    exerciseId: 'barbell-squat',
+    routineExerciseId: null,
+    order: 0,
+    restSec: 90,
+    note: '',
+    supersetGroup: null,
+    ...patch,
+  }
+}
+
 type Change = { table: string; rev: number; row: unknown }
 
-function push(account: Account, changes: Change[], body: Record<string, unknown> = { contractVersion: 1 }) {
+function push(account: Account, changes: Change[], body: Record<string, unknown> = { contractVersion: CONTRACT_VERSION }) {
   return request(app).post('/api/sync/push').set('Cookie', account.cookie).send({ ...body, changes })
 }
 
@@ -118,7 +132,7 @@ async function pull(account: Account, cursor = 0, limit?: number): Promise<PullR
 
 describe('sync API', () => {
   it('requires a session for push and pull', async () => {
-    expect((await request(app).post('/api/sync/push').send({ contractVersion: 1, changes: [] })).status).toBe(401)
+    expect((await request(app).post('/api/sync/push').send({ contractVersion: CONTRACT_VERSION, changes: [] })).status).toBe(401)
     expect((await request(app).get('/api/sync/pull')).status).toBe(401)
   })
 
@@ -254,13 +268,42 @@ describe('sync API', () => {
 
   it('answers client_outdated with 409 to an outdated contract version and stores nothing', async () => {
     const ana = await signIn('ana@example.com')
-    for (const body of [{ contractVersion: 0 }, {}]) {
+    for (const body of [{ contractVersion: 0 }, { contractVersion: 1 }, {}]) {
       const res = await push(ana, [{ table: 'folders', rev: 1, row: folder(uuid()) }], body)
       expect(res.status).toBe(409)
       expect(res.body).toEqual({ error: 'client_outdated' })
     }
     expect(await t.db.select().from(folders)).toEqual([])
     expect(await t.db.select().from(syncCounters)).toEqual([])
+  })
+
+  it('stores and returns the rest of a workout exercise, null meaning no rest', async () => {
+    const ana = await signIn('ana@example.com')
+    const withRest = uuid()
+    const noRest = uuid()
+    const res = await pushOk(ana, [
+      { table: 'workoutExercises', rev: 1, row: workoutExercise(withRest, { restSec: 105 }) },
+      { table: 'workoutExercises', rev: 1, row: workoutExercise(noRest, { restSec: null }) },
+    ])
+    expect(res.outcomes.map((o) => o.status)).toEqual(['accepted', 'accepted'])
+    const stored = await t.db.select().from(workoutExercises)
+    expect(Object.fromEntries(stored.map((r) => [r.id, r.restSec]))).toEqual({ [withRest]: 105, [noRest]: null })
+    const rows = (await pull(ana)).rows.map((r) => r.row as { id: string; restSec: number | null })
+    expect(Object.fromEntries(rows.map((r) => [r.id, r.restSec]))).toEqual({ [withRest]: 105, [noRest]: null })
+  })
+
+  it('rejects a workout exercise pushed without restSec', async () => {
+    const ana = await signIn('ana@example.com')
+    const { restSec: _r, ...row } = workoutExercise(uuid())
+    const res = await pushOk(ana, [{ table: 'workoutExercises', rev: 1, row }])
+    expect(res.outcomes[0]).toMatchObject({ status: 'rejected', reason: 'invalid:row.restSec' })
+  })
+
+  it('does not return a global default rest in settings', async () => {
+    const ana = await signIn('ana@example.com')
+    await pushOk(ana, [{ table: 'settings', rev: 1, row: settingsRow(uuid()) }])
+    const { row } = (await pull(ana)).rows[0]!
+    expect(row).not.toHaveProperty('defaultRestSec')
   })
 
   it('refuses a push of more than 500 changes', async () => {

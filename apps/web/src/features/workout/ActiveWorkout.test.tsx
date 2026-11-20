@@ -211,6 +211,11 @@ describe('V5 · chip "En otra rutina" (R19)', () => {
   })
 })
 
+const TWO_SETS = [
+  { weight: 80, reps: 8 },
+  { weight: 80, reps: 8 },
+]
+
 describe('V5 · ✓, rest and PRs', () => {
   it('AE6: ✓ on A1 starts A’s rest and V6 shows B1 next', async () => {
     const user = userEvent.setup()
@@ -268,6 +273,57 @@ describe('V5 · ✓, rest and PRs', () => {
 
     expect(await screen.findByText('PR')).toBeInTheDocument()
     expect(screen.getAllByText('PR')).toHaveLength(1)
+  })
+
+  it('an exercise without rest shows "Sin descanso" and ✓ opens no rest sheet', async () => {
+    const user = userEvent.setup()
+    const push = await seedRoutine({ name: 'Push', exercises: [{ exerciseId: 'ex-banca', sets: TWO_SETS, restSec: null }] })
+    const { v5 } = await startAndOpen(push.id)
+    expect(within(v5).getByRole('button', { name: /^Sin descanso, Press banca/ })).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Completar fila 1' }))
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Completar fila 1' })).toHaveAttribute('aria-pressed', 'true'))
+    expect(screen.queryByRole('dialog', { name: 'Descanso' })).not.toBeInTheDocument()
+    expect((await getActiveWorkout())!.restEndsAt).toBeNull()
+  })
+
+  it('changing the rest in the workout saves it on the exercise and the next ✓ uses it', async () => {
+    const user = userEvent.setup()
+    const push = await seedRoutine({ name: 'Push', exercises: [{ exerciseId: 'ex-banca', sets: TWO_SETS, restSec: 90 }] })
+    const { v5 } = await startAndOpen(push.id)
+
+    await user.click(within(v5).getByRole('button', { name: /^Descanso 1:30, Press banca/ }))
+    const sheet = screen.getByRole('dialog', { name: 'Descanso entre series' })
+    await user.click(within(sheet).getByRole('button', { name: 'Sumar descanso' }))
+    await user.click(within(sheet).getByRole('button', { name: 'Sumar descanso' }))
+    await waitFor(async () => expect((await listWorkoutExercises((await getActiveWorkout())!.id))[0]!.restSec).toBe(120))
+    await user.click(within(sheet).getByRole('button', { name: 'Listo' }))
+    expect(await within(v5).findByRole('button', { name: /^Descanso 2:00, Press banca/ })).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Completar fila 1' }))
+    await screen.findByRole('dialog', { name: 'Descanso' })
+    const w = await getActiveWorkout()
+    const [first] = await setsOf(0)
+    expect(Date.parse(w!.restEndsAt!) - Date.parse(first!.completedAt!)).toBe(120_000)
+  })
+
+  it('"Sin descanso" in the rest sheet turns the rest timer off for that exercise', async () => {
+    const user = userEvent.setup()
+    const push = await seedRoutine({ name: 'Push', exercises: [{ exerciseId: 'ex-banca', sets: TWO_SETS, restSec: 90 }] })
+    const { v5 } = await startAndOpen(push.id)
+
+    await user.click(within(v5).getByRole('button', { name: /^Descanso 1:30, Press banca/ }))
+    const sheet = screen.getByRole('dialog', { name: 'Descanso entre series' })
+    await user.click(within(sheet).getByRole('radio', { name: '3:00' }))
+    await waitFor(async () => expect((await listWorkoutExercises((await getActiveWorkout())!.id))[0]!.restSec).toBe(180))
+    await user.click(within(sheet).getByRole('button', { name: 'Sin descanso' }))
+    expect(within(sheet).getByRole('button', { name: 'Sin descanso' })).toHaveAttribute('aria-pressed', 'true')
+    await waitFor(async () => expect((await listWorkoutExercises((await getActiveWorkout())!.id))[0]!.restSec).toBeNull())
+    await user.click(within(sheet).getByRole('button', { name: 'Listo' }))
+
+    await user.click(screen.getByRole('button', { name: 'Completar fila 1' }))
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Completar fila 1' })).toHaveAttribute('aria-pressed', 'true'))
+    expect(screen.queryByRole('dialog', { name: 'Descanso' })).not.toBeInTheDocument()
   })
 
   it('the rest end is announced to screen readers', async () => {

@@ -79,6 +79,7 @@ async function applyRoutineChanges(workout: Workout): Promise<void> {
           routineId,
           exerciseId: change.exerciseId,
           order: nextExerciseOrder++,
+          restSec: performed.we.restSec,
           supersetGroup: performed.we.supersetGroup,
         })
         for (const [order, s] of performed.sets.entries()) {
@@ -117,6 +118,7 @@ async function createRoutineFromWorkout(workoutId: Id, name: string) {
       routineId: routine.id,
       exerciseId: we.exerciseId,
       order: order++,
+      restSec: we.restSec,
       supersetGroup: we.supersetGroup,
     })
     for (const [i, s] of completed.entries()) await addRoutineSet({ routineExerciseId: re.id, order: i, ...targetFrom(s) })
@@ -179,6 +181,7 @@ export function repeatWorkout(workoutId: Id): Promise<Workout | undefined> {
         exerciseId: we.exerciseId,
         routineExerciseId: null,
         order: we.order,
+        restSec: we.restSec,
         note: '',
         supersetGroup: we.supersetGroup,
       })

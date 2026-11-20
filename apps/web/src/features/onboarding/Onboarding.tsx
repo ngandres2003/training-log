@@ -18,7 +18,6 @@ const UNITS = [
 ] as const satisfies readonly { value: WeightUnit; label: string }[]
 
 const GOALS = [1, 2, 3, 4, 5, 6, 7].map((n) => ({ value: n, label: String(n) }))
-const RESTS = [60, 90, 120, 180].map((s) => ({ value: s, label: `${s} s` }))
 
 export interface OnboardingProps {
   /** Existing settings on this device, if any; otherwise the defaults are used. */
@@ -34,12 +33,11 @@ export function Onboarding({ initial, onDone }: OnboardingProps) {
   const [unit, setUnit] = useState<WeightUnit>(base.unit)
   const [displayName, setDisplayName] = useState(base.displayName)
   const [weeklyGoal, setWeeklyGoal] = useState(base.weeklyGoal)
-  const [defaultRestSec, setDefaultRestSec] = useState(base.defaultRestSec)
   const [saving, setSaving] = useState(false)
 
   async function finish() {
     setSaving(true)
-    await saveSettings({ unit, displayName: displayName.trim(), weeklyGoal, defaultRestSec, onboardedAt: nowIso() })
+    await saveSettings({ unit, displayName: displayName.trim(), weeklyGoal, onboardedAt: nowIso() })
     onDone()
   }
 
@@ -73,12 +71,6 @@ export function Onboarding({ initial, onDone }: OnboardingProps) {
         <section className="flex flex-col gap-6">
           <h1 className="font-display text-4xl uppercase">Tu objetivo</h1>
           <ChoiceGroup label="Días por semana" choices={GOALS} value={weeklyGoal} onChange={setWeeklyGoal} />
-          <ChoiceGroup
-            label="Descanso por defecto"
-            choices={RESTS}
-            value={defaultRestSec}
-            onChange={setDefaultRestSec}
-          />
         </section>
       )}
 

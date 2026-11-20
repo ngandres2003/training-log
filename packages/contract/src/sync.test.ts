@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   CONTRACT_VERSION,
   MIN_SUPPORTED_CONTRACT_VERSION,
+  ROW_SPECS,
   SYNC_TABLE_NAMES,
   checkChange,
   rowGuards,
@@ -20,7 +21,6 @@ const validRows = {
     displayName: 'Ana',
     unit: 'kg',
     weeklyGoal: 4,
-    defaultRestSec: 90,
     weekStart: 'monday',
     theme: 'dark',
     preloadPrevious: true,
@@ -77,6 +77,7 @@ const validRows = {
     exerciseId: OTHER_ID,
     routineExerciseId: null,
     order: 2,
+    restSec: 90,
     note: 'n',
     supersetGroup: null,
   },
@@ -104,9 +105,9 @@ const validRows = {
 } as const
 
 describe('contract versions', () => {
-  it('starts at version 1 and supports it', () => {
-    expect(CONTRACT_VERSION).toBe(1)
-    expect(MIN_SUPPORTED_CONTRACT_VERSION).toBe(1)
+  it('is at version 2 (per-exercise rest) and no longer supports version 1', () => {
+    expect(CONTRACT_VERSION).toBe(2)
+    expect(MIN_SUPPORTED_CONTRACT_VERSION).toBe(2)
   })
 })
 
@@ -145,6 +146,15 @@ describe('row guards', () => {
     expect(rowProblem('folders', row)).toBeNull()
   })
 
+  it('accepts a workout exercise without rest (restSec null)', () => {
+    expect(rowProblem('workoutExercises', { ...validRows.workoutExercises, restSec: null })).toBeNull()
+  })
+
+  it('has no global default rest: rest lives on each workout exercise', () => {
+    expect(Object.keys(ROW_SPECS.settings)).not.toContain('defaultRestSec')
+    expect(ROW_SPECS.workoutExercises.restSec).toEqual({ nullable: 'int' })
+  })
+
   it('accepts a tombstone with an ISO deletedAt', () => {
     expect(rowProblem('folders', { ...validRows.folders, deletedAt: NOW })).toBeNull()
   })
@@ -163,6 +173,8 @@ describe('row guards', () => {
     ['routines', { createdAt: null }, 'createdAt'],
     ['workouts', { tags: ['ok', 1] }, 'tags'],
     ['workouts', { status: 'paused' }, 'status'],
+    ['workoutExercises', { restSec: undefined }, 'restSec'],
+    ['workoutExercises', { restSec: 1.5 }, 'restSec'],
     ['workoutSets', { rpe: '7' }, 'rpe'],
     ['customExercises', { trackingType: 'distance' }, 'trackingType'],
   ] as const)('rejects %s with %o at field %s', (table, patch, field) => {

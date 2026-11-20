@@ -70,6 +70,37 @@ db.version(1).stores({
   syncErrors: 'key, table',
 })
 
+export type Loose = Record<string, unknown>
+
+/**
+ * Rest moved from the global `settings.defaultRestSec` to each workout exercise (contract v2).
+ * Brings a row written before that change up to date in place: a workout exercise without
+ * `restSec` gets null (no rest timer) and settings lose the old field. Used by the v2 upgrade
+ * below and by the JSON import, which accepts exports made before the change.
+ */
+export function moveRestToWorkoutExercises(table: string, row: Loose): void {
+  if (table === 'workoutExercises' && row.restSec === undefined) row.restSec = null
+  if (table === 'settings') delete row.defaultRestSec
+}
+
+// v2: the tables and pending outbox snapshots are brought up to date so they push as valid v2 rows.
+db.version(2)
+  .stores({})
+  .upgrade(async (tx) => {
+    await tx
+      .table('workoutExercises')
+      .toCollection()
+      .modify((row: Loose) => moveRestToWorkoutExercises('workoutExercises', row))
+    await tx
+      .table('settings')
+      .toCollection()
+      .modify((row: Loose) => moveRestToWorkoutExercises('settings', row))
+    await tx
+      .table('outbox')
+      .toCollection()
+      .modify((entry: OutboxEntry) => moveRestToWorkoutExercises(entry.table, entry.row as unknown as Loose))
+  })
+
 export function syncTable<T extends SyncTable>(table: T): Table<SyncRowByTable[T], Id> {
   return db.table(table)
 }

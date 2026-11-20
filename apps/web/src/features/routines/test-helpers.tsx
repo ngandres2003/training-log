@@ -81,6 +81,7 @@ export async function seedFinishedWorkout(input: {
       workoutId: w.id,
       exerciseId: input.exerciseId ?? 'cat-banca',
       routineExerciseId: null,
+      restSec: null,
       order: 0,
       note: '',
       supersetGroup: null,

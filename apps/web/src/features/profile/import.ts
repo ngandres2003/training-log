@@ -1,5 +1,6 @@
 import { SYNC_TABLES, type Id, type SyncRowByTable, type SyncTable } from '@training-log/domain'
 import { newId, nowIso } from '../../data/ids'
+import { moveRestToWorkoutExercises } from '../../data/db'
 import { writeRow } from '../../data/outbox'
 import { inWriteTransaction } from '../../data/repositories/base'
 import { getSettings } from '../../data/repositories/settings'
@@ -56,6 +57,7 @@ const REFERENCES: { [T in SyncTable]?: (keyof SyncRowByTable[T])[] } = {
  * - Other account: every row gets a new id and every reference between rows is rewritten, since
  *   the server refuses ids owned by another account. Catalog exercise ids are left as they are.
  * Settings are one row per user: they merge into this device's settings row when it has one.
+ * Exports made before rest moved to each workout exercise are brought up to date.
  */
 export async function importExport(file: ExportFile): Promise<ImportResult> {
   const user = await getLastKnownUser()
@@ -75,6 +77,7 @@ export async function importExport(file: ExportFile): Promise<ImportResult> {
     for (const t of SYNC_TABLES) {
       for (const source of file.tables[t]) {
         const row: Record<string, unknown> = { ...source, id: mapId(source.id) }
+        moveRestToWorkoutExercises(t, row)
         for (const field of (REFERENCES[t] ?? []) as string[]) {
           const ref = row[field]
           if (typeof ref === 'string') row[field] = mapId(ref)

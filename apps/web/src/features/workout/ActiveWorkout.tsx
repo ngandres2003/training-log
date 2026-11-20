@@ -27,6 +27,7 @@ import {
   removeExercise,
   replaceExercise,
   saveExerciseNote,
+  saveExerciseRest,
   saveSet,
   skipRest,
   toggleSuperset,
@@ -97,7 +98,7 @@ export function ActiveWorkout({ workoutId }: { workoutId: Id }) {
       if (settings.vibrationOn) vibrate(40)
       follow.current = 'next'
       void completeSet({ workoutId, setId: set.set.id, values, restSec: exercise.restSec }).then(() => {
-        if (exercise.restSec > 0) openRest()
+        if (exercise.restSec != null && exercise.restSec > 0) openRest()
       })
     },
     onSave: (setId, patch) => void saveSet(setId, patch),
@@ -108,6 +109,7 @@ export function ActiveWorkout({ workoutId }: { workoutId: Id }) {
     onRemove: (weId) => void removeExercise(weId),
     onToggleSuperset: (weId) => void toggleSuperset(workoutId, weId),
     onSaveNote: (weId, note) => void saveExerciseNote(weId, note),
+    onSaveRest: (weId, restSec) => void saveExerciseRest(weId, restSec),
   }
 
   const exerciseIds = model.exercises.map((e) => e.we.id)

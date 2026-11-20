@@ -11,7 +11,6 @@ const UNITS = [
   { value: 'lb', label: 'lb' },
 ] as const satisfies readonly { value: WeightUnit; label: string }[]
 const GOALS = [1, 2, 3, 4, 5, 6, 7].map((n) => ({ value: n, label: String(n) }))
-const RESTS = [60, 90, 120, 180].map((s) => ({ value: s, label: `${s} s` }))
 const WEEK_STARTS = [
   { value: 'monday', label: 'Lunes' },
   { value: 'sunday', label: 'Domingo' },
@@ -68,12 +67,6 @@ export function SettingsForm() {
           choices={GOALS}
           value={s.weeklyGoal}
           onChange={(weeklyGoal) => save({ weeklyGoal })}
-        />
-        <ChoiceGroup
-          label="Descanso por defecto"
-          choices={RESTS}
-          value={s.defaultRestSec}
-          onChange={(defaultRestSec) => save({ defaultRestSec })}
         />
         <ChoiceGroup
           label="Inicio de semana"

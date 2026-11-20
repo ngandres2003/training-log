@@ -29,7 +29,7 @@ export function ChoiceGroup<V extends string | number>({ label, choices, value, 
             <label
               key={String(c.value)}
               className={`flex min-h-12 min-w-12 flex-1 cursor-pointer items-center justify-center rounded-lg border px-2 has-focus-visible:outline-2 has-focus-visible:outline-sol ${
-                checked ? 'border-sol bg-sol font-bold text-hierro' : 'border-concreto bg-asfalto text-arena'
+                checked ? 'border-sol bg-sol font-bold text-tinta' : 'border-concreto bg-asfalto text-arena'
               }`}
             >
               <input

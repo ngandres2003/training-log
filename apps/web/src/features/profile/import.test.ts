@@ -1,5 +1,5 @@
 import 'fake-indexeddb/auto'
-import type { PullResponse, PushOutcome, PushRequest } from '@training-log/contract'
+import { rowProblem, type PullResponse, type PushOutcome, type PushRequest } from '@training-log/contract'
 import { SYNC_TABLES, type SyncRowByTable, type SyncTable } from '@training-log/domain'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { db, syncTable } from '../../data/db'
@@ -153,6 +153,22 @@ describe('JSON import', () => {
     expect(await engine.sync()).toBe('ok')
     expect(await db.syncErrors.count()).toBe(0)
     expect(await db.outbox.count()).toBe(0)
+  })
+
+  it('brings an export made before per-exercise rest up to date: no global rest, workout exercises without rest', async () => {
+    await seedAccount()
+    const legacy = JSON.parse(await exportedText()) as { tables: Record<string, Record<string, unknown>[]> }
+    for (const s of legacy.tables.settings!) s.defaultRestSec = 90
+    for (const we of legacy.tables.workoutExercises!) delete we.restSec
+
+    await resetDb()
+    await importExport(parseExport(JSON.stringify(legacy)))
+
+    const rows = await allRows()
+    expect(rows.settings[0]).not.toHaveProperty('defaultRestSec')
+    expect(rows.workoutExercises.map((we) => we.restSec)).toEqual(rows.workoutExercises.map(() => null))
+    const pushed = (await pendingEntries()).filter((e) => e.table === 'workoutExercises' || e.table === 'settings')
+    for (const e of pushed) expect(rowProblem(e.table, e.row)).toBeNull()
   })
 
   it('rejects a file that is not an export', () => {

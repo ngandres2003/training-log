@@ -84,6 +84,7 @@ export const workoutExercise = (p: Partial<WorkoutExercise> = {}): WorkoutExerci
   exerciseId: 'squat',
   routineExerciseId: null,
   order: 0,
+  restSec: null,
   note: '',
   supersetGroup: null,
   ...p,

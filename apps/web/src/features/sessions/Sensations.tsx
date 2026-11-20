@@ -81,7 +81,7 @@ export function SensationsEditor({
               aria-pressed={on}
               onClick={() => toggleTag(tag)}
               className={`min-h-12 rounded-full border px-4 text-sm ${
-                on ? 'border-sol bg-sol font-bold text-hierro' : 'border-concreto bg-asfalto text-arena'
+                on ? 'border-sol bg-sol font-bold text-tinta' : 'border-concreto bg-asfalto text-arena'
               }`}
             >
               {tag}

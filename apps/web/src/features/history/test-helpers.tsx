@@ -44,6 +44,7 @@ export async function seedSession(input: {
     workoutId: w.id,
     exerciseId: 'cat-banca',
     routineExerciseId: null,
+    restSec: null,
     order: 0,
     note: '',
     supersetGroup: null,

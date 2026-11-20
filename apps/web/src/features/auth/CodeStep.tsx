@@ -107,7 +107,7 @@ export function CodeStep({ email, api, onVerified, onChangeEmail, sendOnMount = 
       <button
         type="submit"
         disabled={code.length !== 6 || busy || !online}
-        className="min-h-12 rounded-lg bg-sol font-bold text-hierro disabled:opacity-50"
+        className="min-h-12 rounded-lg bg-sol font-bold text-tinta disabled:opacity-50"
       >
         {busy ? 'Comprobando…' : 'Entrar'}
       </button>

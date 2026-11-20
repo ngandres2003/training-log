@@ -84,7 +84,7 @@ export function ExerciseBrowser(props: ExerciseBrowserProps) {
           aria-pressed={mineOnly}
           onClick={() => setMineOnly((v) => !v)}
           className={`min-h-12 rounded-lg border px-4 ${
-            mineOnly ? 'border-sol bg-sol font-bold text-hierro' : 'border-concreto bg-asfalto text-arena'
+            mineOnly ? 'border-sol bg-sol font-bold text-tinta' : 'border-concreto bg-asfalto text-arena'
           }`}
         >
           {mineOnly && <span aria-hidden="true">✓ </span>}

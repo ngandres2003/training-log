@@ -6,9 +6,11 @@
 
 /*
  * Theme tokens (KTD14) from docs/designs/2026-11-17-v5-v6-lienzo.md.
- * Dark is the default. Fonts are bundled (not Google Fonts) so they work offline.
+ * Light is the default; `data-theme` on <html> is set before first paint by index.html and kept
+ * in sync with the user's setting by ui/theme.ts. Fonts are bundled so they work offline.
  */
-:root {
+:root,
+:root[data-theme='dark'] {
   --sol: #f6c026; /* primary action, timer, checked set, superset border */
   --atardecer: #f08a24; /* personal records only */
   --arena: #efe6d2; /* primary text, completed values */
@@ -20,16 +22,23 @@
   --borde-fuerte: #3a3832;
   --borde-activo: #4a4740;
   --fondo-superserie: #12120f;
+  --tinta: #0e0e0c; /* text on Sol, Atardecer and routine colours, in both themes */
   color-scheme: dark;
 }
 
-/* Light variant: provisional until designed. */
+/* Light variant (provisional until designed): same roles, warm paper background. */
 :root[data-theme='light'] {
+  --sol: #e0a300;
+  --atardecer: #e07316;
   --arena: #1c1b18;
-  --polvo: #5d5a52;
+  --polvo: #6b675d;
   --hierro: #f7f4ec;
   --asfalto: #ffffff;
   --concreto: #e4dfd2;
+  --oceano: #1f86b8;
+  --borde-fuerte: #d6d0c1;
+  --borde-activo: #bdb6a5;
+  --fondo-superserie: #fbf6e6;
   color-scheme: light;
 }
 
@@ -45,6 +54,7 @@
   --color-borde-fuerte: var(--borde-fuerte);
   --color-borde-activo: var(--borde-activo);
   --color-fondo-superserie: var(--fondo-superserie);
+  --color-tinta: var(--tinta);
   --font-display: 'Anton', sans-serif;
   --font-sans: 'Archivo', system-ui, sans-serif;
 }

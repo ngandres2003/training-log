@@ -24,7 +24,6 @@ export interface Settings extends SyncFields {
   displayName: string
   unit: WeightUnit
   weeklyGoal: number // 1–7 days
-  defaultRestSec: number
   weekStart: WeekStart
   theme: Theme
   preloadPrevious: boolean
@@ -120,6 +119,8 @@ export interface WorkoutExercise extends SyncFields {
   exerciseId: Id
   routineExerciseId: Id | null
   order: number
+  /** Rest after each set of this exercise, copied from the routine at start; null = no rest timer. */
+  restSec: number | null
   note: string
   supersetGroup: string | null
 }

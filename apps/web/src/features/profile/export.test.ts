@@ -48,6 +48,7 @@ describe('CSV export', () => {
       workoutId: discarded.id,
       exerciseId: 'plank',
       routineExerciseId: null,
+      restSec: null,
       order: 0,
       note: '',
       supersetGroup: null,

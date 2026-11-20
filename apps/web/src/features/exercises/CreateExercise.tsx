@@ -205,7 +205,7 @@ export function CreateExercise({
               <label
                 key={m.id}
                 className={`flex min-h-12 cursor-pointer items-center rounded-lg border px-3 has-focus-visible:outline-2 has-focus-visible:outline-sol ${
-                  checked ? 'border-sol bg-sol font-bold text-hierro' : 'border-concreto bg-asfalto text-arena'
+                  checked ? 'border-sol bg-sol font-bold text-tinta' : 'border-concreto bg-asfalto text-arena'
                 }`}
               >
                 <input type="checkbox" checked={checked} onChange={() => toggleSecondary(m.id)} className="sr-only" />

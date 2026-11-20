@@ -56,14 +56,12 @@ describe('Onboarding (V0)', () => {
     await user.type(name, 'Ana')
     await user.click(screen.getByRole('button', { name: 'Siguiente' }))
 
-    // Step 2: weekly goal and default rest.
+    // Step 2: weekly goal only (rest is set per exercise, there is no global default).
     expect(await screen.findByRole('heading', { name: 'Tu objetivo' })).toBeInTheDocument()
     const goal = screen.getByRole('radiogroup', { name: 'Días por semana' })
     expect(within(goal).getAllByRole('radio')).toHaveLength(7)
     await user.click(within(goal).getByRole('radio', { name: '5' }))
-    const rest = screen.getByRole('radiogroup', { name: 'Descanso por defecto' })
-    expect(within(rest).getAllByRole('radio').map((r) => r.getAttribute('value'))).toEqual(['60', '90', '120', '180'])
-    await user.click(within(rest).getByRole('radio', { name: '120 s' }))
+    expect(screen.queryByRole('radiogroup', { name: /descanso/i })).not.toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Siguiente' }))
 
     // Step 3: install and notifications, then finish.
@@ -74,7 +72,8 @@ describe('Onboarding (V0)', () => {
 
     expect(await screen.findByRole('heading', { name: 'Inicio' })).toBeInTheDocument()
     const saved = await getSettings()
-    expect(saved).toMatchObject({ unit: 'lb', displayName: 'Ana', weeklyGoal: 5, defaultRestSec: 120 })
+    expect(saved).toMatchObject({ unit: 'lb', displayName: 'Ana', weeklyGoal: 5 })
+    expect(saved).not.toHaveProperty('defaultRestSec')
     expect(saved?.onboardedAt).not.toBeNull()
 
     cleanup()

@@ -237,7 +237,7 @@ export function SetRow(props: SetRowProps) {
                   aria-label={stopwatchFrom === null ? `Cronometrar fila ${rowName}` : `Detener cronómetro fila ${rowName}`}
                   onClick={toggleStopwatch}
                   className={`inline-flex size-12 shrink-0 items-center justify-center rounded-lg ${
-                    stopwatchFrom === null ? 'text-polvo' : 'bg-sol text-hierro'
+                    stopwatchFrom === null ? 'text-polvo' : 'bg-sol text-tinta'
                   }`}
                 >
                   {stopwatchFrom === null ? (
@@ -258,7 +258,7 @@ export function SetRow(props: SetRowProps) {
             disabled={!set.completed && !canComplete}
             onClick={toggle}
             className={`inline-flex size-12 items-center justify-center rounded-lg disabled:opacity-40 ${
-              set.completed ? 'bg-sol text-hierro' : 'bg-concreto text-polvo'
+              set.completed ? 'bg-sol text-tinta' : 'bg-concreto text-polvo'
             }`}
           >
             <Check aria-hidden="true" className="size-6" strokeWidth={set.completed ? 3 : 2} />

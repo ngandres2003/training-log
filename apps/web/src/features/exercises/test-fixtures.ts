@@ -65,6 +65,7 @@ export async function addFinishedWorkout(exerciseId: Id, sets: { weight: number;
     workoutId: workout.id,
     exerciseId,
     routineExerciseId: null,
+    restSec: null,
     order: 0,
     note: '',
     supersetGroup: null,

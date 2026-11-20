@@ -33,6 +33,7 @@ describe('workouts repository', () => {
       workoutId: w.id,
       exerciseId: 'bench',
       routineExerciseId: null,
+      restSec: null,
       order: 0,
       note: '',
       supersetGroup: null,

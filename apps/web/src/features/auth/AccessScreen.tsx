@@ -101,7 +101,7 @@ export function AccessScreen({ onSignedIn, api = authApi }: AccessScreenProps) {
           <button
             type="submit"
             disabled={!online || sending || waitIn > 0}
-            className="min-h-12 rounded-lg bg-sol font-bold text-hierro disabled:opacity-50"
+            className="min-h-12 rounded-lg bg-sol font-bold text-tinta disabled:opacity-50"
           >
             {sending ? 'Enviando…' : 'Enviar código'}
           </button>

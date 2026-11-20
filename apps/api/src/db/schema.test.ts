@@ -22,7 +22,7 @@ function rowFor(table: SyncTable, userId: string, id: string, version: number) {
   const parent = '00000000-0000-7000-8000-000000000999'
   switch (table) {
     case 'settings':
-      return { ...base, displayName: 'A', unit: 'kg', weeklyGoal: 3, defaultRestSec: 90, weekStart: 'monday', theme: 'dark', preloadPrevious: true, soundOn: true, vibrationOn: true, keepScreenOn: false, onboardedAt: null }
+      return { ...base, displayName: 'A', unit: 'kg', weeklyGoal: 3, weekStart: 'monday', theme: 'dark', preloadPrevious: true, soundOn: true, vibrationOn: true, keepScreenOn: false, onboardedAt: null }
     case 'folders':
       return { ...base, name: 'F', order: 0, isCycle: true }
     case 'routines':
@@ -34,7 +34,7 @@ function rowFor(table: SyncTable, userId: string, id: string, version: number) {
     case 'workouts':
       return { ...base, routineId: parent, name: 'Pierna B', startedAt: now, endedAt: null, status: 'active', energy: 4, tags: ['gym'], note: '', restEndsAt: null }
     case 'workoutExercises':
-      return { ...base, workoutId: parent, exerciseId: 'barbell-squat', routineExerciseId: null, order: 0, note: '', supersetGroup: null }
+      return { ...base, workoutId: parent, exerciseId: 'barbell-squat', routineExerciseId: null, order: 0, restSec: 90, note: '', supersetGroup: null }
     case 'workoutSets':
       return { ...base, workoutExerciseId: parent, order: 0, type: 'normal', weight: 62.5, reps: 8, durationSec: null, rpe: 8, completed: true, completedAt: now }
     case 'customExercises':
@@ -64,6 +64,18 @@ describe('server schema', () => {
       ]),
     )
     expect(names).not.toContain('personal_records')
+  })
+
+  it('moves rest to workout exercises: settings.default_rest_sec becomes nullable, workout_exercises.rest_sec is added', async () => {
+    const res = (await t.db.execute(
+      sql`select table_name, column_name, is_nullable from information_schema.columns
+          where table_schema = 'public' and column_name in ('default_rest_sec', 'rest_sec') order by table_name`,
+    )) as unknown as { rows: { table_name: string; column_name: string; is_nullable: string }[] }
+    expect(res.rows).toEqual([
+      { table_name: 'routine_exercises', column_name: 'rest_sec', is_nullable: 'YES' },
+      { table_name: 'settings', column_name: 'default_rest_sec', is_nullable: 'YES' },
+      { table_name: 'workout_exercises', column_name: 'rest_sec', is_nullable: 'YES' },
+    ])
   })
 
   it('maps every shared sync table name to a Postgres table', () => {

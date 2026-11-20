@@ -116,7 +116,7 @@ export function RoutineDetail() {
         <button
           type="button"
           onClick={() => void onStartRoutine(routine.id)}
-          className="inline-flex min-h-14 items-center justify-center gap-2 rounded-xl bg-sol px-4 font-display text-xl text-hierro uppercase"
+          className="inline-flex min-h-14 items-center justify-center gap-2 rounded-xl bg-sol px-4 font-display text-xl text-tinta uppercase"
         >
           <Play aria-hidden="true" className="size-5 fill-current" />
           Iniciar

@@ -51,6 +51,18 @@ describe('startOrResumeWorkout', () => {
     expect(await listWorkoutSets(exercises[1]!.id)).toHaveLength(2)
   })
 
+  it("copies each routine exercise's rest; no rest in the routine stays no rest", async () => {
+    const routine = await seedRoutine({
+      name: 'Push',
+      exercises: [
+        { exerciseId: 'ex-banca', sets: 1, restSec: 150 },
+        { exerciseId: 'ex-remo', sets: 1, restSec: null },
+      ],
+    })
+    const workout = await startOrResumeWorkout(routine.id)
+    expect((await listWorkoutExercises(workout.id)).map((e) => e.restSec)).toEqual([150, null])
+  })
+
   it('resumes the workout in progress instead of starting a second one', async () => {
     const routine = await seedRoutine({ name: 'Push', exercises: [{ exerciseId: 'ex-banca', sets: 1 }] })
     const first = await startOrResumeWorkout(routine.id)
@@ -71,6 +83,8 @@ describe('sets and rest', () => {
     const w = await startOrResumeWorkout(null)
     await addExercises(w.id, ['ex-banca'])
     const [we] = await listWorkoutExercises(w.id)
+    // Exercises added to a workout start without rest.
+    expect(we!.restSec).toBeNull()
     await addSet(we!.id)
     const sets = await listWorkoutSets(we!.id)
     expect(sets).toHaveLength(2)

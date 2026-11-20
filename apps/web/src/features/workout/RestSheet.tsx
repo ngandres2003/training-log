@@ -70,7 +70,7 @@ export function RestSheet({
               {last.exercise.letter && `${last.exercise.letter}${last.set.index + 1} · `}
               {last.exercise.name} · {fullSet(last.set.set, last.exercise.trackingType, unit)}
             </span>
-            {last.set.pr && <span className="shrink-0 rounded bg-atardecer px-1.5 font-bold text-hierro">PR</span>}
+            {last.set.pr && <span className="shrink-0 rounded bg-atardecer px-1.5 font-bold text-tinta">PR</span>}
           </p>
         )}
 
@@ -148,7 +148,7 @@ function NextCard({ model }: { model: WorkoutModel }) {
                 key={r.set.set.id}
                 aria-current={current ? 'step' : undefined}
                 className={`rounded px-2 py-0.5 font-display text-sm ${
-                  current ? 'bg-sol text-hierro' : r.set.set.completed ? 'text-polvo line-through' : 'text-arena'
+                  current ? 'bg-sol text-tinta' : r.set.set.completed ? 'text-polvo line-through' : 'text-arena'
                 }`}
               >
                 {label}

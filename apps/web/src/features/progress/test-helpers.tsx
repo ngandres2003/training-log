@@ -102,6 +102,7 @@ export async function seedSession(input: {
       workoutId: w.id,
       exerciseId: ex.exerciseId,
       routineExerciseId: null,
+      restSec: null,
       order: i,
       note: '',
       supersetGroup: null,

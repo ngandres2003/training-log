@@ -171,7 +171,7 @@ export function RoutineEditor() {
                 />
                 <span aria-hidden="true" className="size-9 rounded-full" style={{ backgroundColor: c.value }} />
                 {draft.color === c.value && (
-                  <span aria-hidden="true" className="absolute font-bold text-hierro">
+                  <span aria-hidden="true" className="absolute font-bold text-tinta">
                     ✓
                   </span>
                 )}
@@ -234,7 +234,6 @@ export function RoutineEditor() {
                   name={exerciseName(ex.exerciseId)}
                   trackingType={trackingOf(ex.exerciseId)}
                   unit={settings.unit}
-                  defaultRestSec={settings.defaultRestSec}
                   isFirst={i === 0}
                   isLast={i === draft.exercises.length - 1}
                   inSuperset={inSuperset}
@@ -284,7 +283,6 @@ function ExerciseCard({
   name,
   trackingType,
   unit,
-  defaultRestSec,
   isFirst,
   isLast,
   inSuperset,
@@ -298,7 +296,6 @@ function ExerciseCard({
   name: string
   trackingType: TrackingType
   unit: WeightUnit
-  defaultRestSec: number
   isFirst: boolean
   isLast: boolean
   inSuperset: boolean
@@ -428,12 +425,12 @@ function ExerciseCard({
 
       <div className="grid grid-cols-2 gap-2">
         <label className="flex flex-col gap-1 text-sm text-polvo">
-          Descanso propio (s)
+          Descanso (s)
           <input
             inputMode="numeric"
             value={ex.restSec}
             onChange={(e) => onChange({ restSec: e.target.value })}
-            placeholder={`${defaultRestSec} (global)`}
+            placeholder="Sin descanso"
             className={inputClass}
           />
         </label>

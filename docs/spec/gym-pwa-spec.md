@@ -315,7 +315,7 @@ La clave del diseño: **plantilla** (Routine) y **ejecución** (Workout) son ent
 | Entidad | Campos principales | Notas |
 | --- | --- | --- |
 | User | id, email, name, createdAt | Cuenta (gestionada por la librería de autenticación); todas las demás entidades (salvo el catálogo base) llevan userId. Toda entidad sincronizable lleva además updatedAt, deletedAt y version (ver plan) |
-| Settings | userId, unit (kg/lb), weeklyGoal, defaultRestSec, weekStart, theme, preloadPrevious, soundOn | Uno por usuario |
+| Settings | userId, unit (kg/lb), weeklyGoal, weekStart, theme, preloadPrevious, soundOn | Uno por usuario |
 | Muscle | id, name, region (front, back) | Lista fija; la usan el catálogo, los personalizados y el mapa muscular |
 | Exercise | id, userId? (null = catálogo base), name, primaryMuscle, secondaryMuscles\[\], equipment, trackingType (weight\_reps, reps, time), isCustom, imageUrl? | Catálogo base de una fuente abierta + personalizados privados |
 | Folder | id, name, order, isCycle | isCycle = programa en ciclo; el orden de sus rutinas define la secuencia |
@@ -323,7 +323,7 @@ La clave del diseño: **plantilla** (Routine) y **ejecución** (Workout) son ent
 | RoutineExercise | id, routineId, exerciseId, order, restSec?, note, supersetGroup? | Ejercicio dentro de la plantilla |
 | RoutineSet | id, routineExerciseId, order, type (warmup, normal, drop, failure), targetRepsMin, targetRepsMax, targetWeight?, targetDurationSec? | Series planificadas |
 | Workout | id, routineId? (null si es libre), name (copia del nombre de la rutina), startedAt, endedAt?, status (active, finished, discarded), energy 1–5, tags\[\], note | Una sesión; sin esfuerzo global (se usa el RPE medio) |
-| WorkoutExercise | id, workoutId, exerciseId, routineExerciseId?, order, note | Copia del ejercicio en la sesión |
+| WorkoutExercise | id, workoutId, exerciseId, routineExerciseId?, order, restSec?, note | Copia del ejercicio en la sesión; `restSec` se copia de la rutina y se cambia en el entreno (null = sin descanso) |
 | WorkoutSet | id, workoutExerciseId, order, type, weight (o lastre), reps, durationSec?, rpe?, completed, completedAt? | Lo realmente hecho |
 | PersonalRecord | — | No se guarda: los récords se calculan en el dispositivo a partir de las sesiones, así editar o borrar una sesión los corrige solo |
 | BodyMetric (futuro) | id, date, weightKg, waist, chest, arm, thigh, bodyFatPct | V13 |

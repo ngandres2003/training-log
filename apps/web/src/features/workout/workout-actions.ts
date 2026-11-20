@@ -62,6 +62,7 @@ export function startOrResumeWorkout(routineId: Id | null): Promise<Workout> {
         exerciseId: re.exerciseId,
         routineExerciseId: re.id,
         order: re.order,
+        restSec: re.restSec,
         note: '',
         supersetGroup: re.supersetGroup,
       })
@@ -97,6 +98,7 @@ export function addExercises(workoutId: Id, exerciseIds: Id[]): Promise<void> {
         exerciseId,
         routineExerciseId: null,
         order: order++,
+        restSec: null,
         note: '',
         supersetGroup: null,
       })
@@ -127,7 +129,8 @@ export function completeSet(input: {
   workoutId: Id
   setId: Id
   values: SetPatch
-  restSec: number
+  /** The exercise's rest; null or 0 = no rest timer. */
+  restSec: number | null
   now?: number
 }): Promise<void> {
   const now = input.now ?? Date.now()
@@ -138,7 +141,7 @@ export function completeSet(input: {
       completedAt: new Date(now).toISOString(),
     })
     await updateWorkout(input.workoutId, {
-      restEndsAt: input.restSec > 0 ? new Date(now + input.restSec * 1000).toISOString() : null,
+      restEndsAt: input.restSec && input.restSec > 0 ? new Date(now + input.restSec * 1000).toISOString() : null,
     })
   })
 }
@@ -167,6 +170,10 @@ export const removeExercise = (workoutExerciseId: Id) => removeWorkoutExercise(w
 
 export const saveExerciseNote = (workoutExerciseId: Id, note: string) =>
   updateWorkoutExercise(workoutExerciseId, { note }).then(() => undefined)
+
+/** Rest after each set of this exercise; null or 0 = no rest timer. The next ✓ uses it. */
+export const saveExerciseRest = (workoutExerciseId: Id, restSec: number | null) =>
+  updateWorkoutExercise(workoutExerciseId, { restSec: restSec && restSec > 0 ? restSec : null }).then(() => undefined)
 
 /** Groups the exercise with the next one, or takes it out of its superset. */
 export function toggleSuperset(workoutId: Id, workoutExerciseId: Id): Promise<void> {

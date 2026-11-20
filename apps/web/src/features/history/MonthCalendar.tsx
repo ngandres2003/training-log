@@ -105,7 +105,7 @@ export function MonthCalendar({
               onClick={() => onSelectDay(day)}
               className={`flex min-h-12 flex-col items-center justify-center gap-1 rounded-lg ${
                 isSelected
-                  ? 'bg-sol font-bold text-hierro'
+                  ? 'bg-sol font-bold text-tinta'
                   : day === today
                     ? 'bg-asfalto font-bold'
                     : ''

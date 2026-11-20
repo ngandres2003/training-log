@@ -3,7 +3,7 @@ import type { ButtonHTMLAttributes } from 'react'
 export type ButtonVariant = 'primary' | 'secondary' | 'ghost'
 
 const VARIANTS: Record<ButtonVariant, string> = {
-  primary: 'bg-sol text-hierro font-bold',
+  primary: 'bg-sol text-tinta font-bold',
   secondary: 'border border-concreto bg-asfalto text-arena font-medium',
   ghost: 'text-polvo font-medium',
 }

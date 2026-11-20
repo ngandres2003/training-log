@@ -123,7 +123,9 @@ describe('Crear / editar rutina (V3)', () => {
     renderRoutines(`/rutinas/${r.id}/editar`)
 
     const banca = await screen.findByRole('region', { name: 'Press banca' })
-    await user.type(within(banca).getByLabelText('Descanso propio (s)'), '120')
+    // Rest is optional: empty means no rest timer, there is no global default to fall back on.
+    expect(within(banca).getByLabelText('Descanso (s)')).toHaveAttribute('placeholder', 'Sin descanso')
+    await user.type(within(banca).getByLabelText('Descanso (s)'), '120')
     await user.type(within(banca).getByLabelText('Nota fija'), 'agarre neutro')
     await user.click(within(banca).getByRole('button', { name: 'Bajar' }))
     const dominadas = screen.getByRole('region', { name: 'Dominadas' })
@@ -136,6 +138,7 @@ describe('Crear / editar rutina (V3)', () => {
     })
     const [first, second] = await listRoutineExercises(r.id)
     expect(second).toMatchObject({ restSec: 120, note: 'agarre neutro' })
+    expect(first!.restSec).toBeNull()
     expect(first!.supersetGroup).not.toBeNull()
     expect(second!.supersetGroup).toBe(first!.supersetGroup)
     expect(await listRoutineSets(second!.id)).toHaveLength(2)

@@ -106,7 +106,8 @@ export interface ExerciseModel {
   exercise: Exercise | undefined
   name: string
   trackingType: TrackingType
-  restSec: number
+  /** Rest after each set (seconds); null = no rest timer. Lives on the workout exercise. */
+  restSec: number | null
   /** Fixed note from the routine. */
   fixedNote: string
   sets: SetModel[]
@@ -216,7 +217,7 @@ export function buildWorkoutModel(data: WorkoutData, lookup: Map<Id, Exercise>):
       exercise,
       name: exercise?.name ?? 'Ejercicio',
       trackingType,
-      restSec: re?.restSec ?? settings.defaultRestSec,
+      restSec: we.restSec,
       fixedNote: re?.note ?? '',
       sets: setModels,
       chip,

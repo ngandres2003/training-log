@@ -8,7 +8,7 @@ export interface ShareCard {
 }
 
 const SIZE = 1080
-// Dark theme colors (ui/theme.css): Hierro background, Sol accent, Arena text, Polvo secondary.
+// Dark theme colors (ui/theme.css), fixed so the shared image looks the same in either theme: Hierro background, Sol accent, Arena text, Polvo secondary.
 const HIERRO = '#0e0e0c'
 const SOL = '#f6c026'
 const ARENA = '#efe6d2'

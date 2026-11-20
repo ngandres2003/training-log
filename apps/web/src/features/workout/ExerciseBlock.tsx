@@ -6,8 +6,8 @@ import { Button } from '../../ui/Button'
 import { ExerciseThumb, muscleLabel } from '../exercises/ExerciseRow'
 import { ConfirmSheet, Sheet } from '../routines/components/Sheet'
 import { ActionMenu, type ActionItem } from './components/ActionMenu'
-import { restClock } from './format'
 import { OtherRoutineChip } from './OtherRoutineChip'
+import { RestSetting } from './RestSetting'
 import { fieldsFor, SetRow } from './SetRow'
 import { SupersetGroup } from './SupersetGroup'
 import { alternation, type BlockModel, type ExerciseModel, type SetModel } from './view-model'
@@ -23,6 +23,8 @@ export interface ExerciseBlockHandlers {
   onRemove: (workoutExerciseId: Id) => void
   onToggleSuperset: (workoutExerciseId: Id) => void
   onSaveNote: (workoutExerciseId: Id, note: string) => void
+  /** Rest of the exercise (null = none); absent where it cannot change. */
+  onSaveRest?: (workoutExerciseId: Id, restSec: number | null) => void
 }
 
 function ExerciseHeader({
@@ -70,7 +72,11 @@ function ExerciseHeader({
             {exercise.name}
           </Link>
           {muscles && <span className="truncate text-sm text-polvo">{muscles}</span>}
-          <span className="text-sm text-polvo">Descanso {restClock(exercise.restSec * 1000)}</span>
+          <RestSetting
+            exerciseName={exercise.name}
+            restSec={exercise.restSec}
+            onSave={handlers.onSaveRest && ((restSec) => handlers.onSaveRest!(we.id, restSec))}
+          />
         </div>
         <ActionMenu label={`Opciones de ${exercise.name}`} items={items} className="text-polvo">
           <Ellipsis aria-hidden="true" className="size-6" />

@@ -58,7 +58,12 @@ export const settings = pgTable(
     displayName: text('display_name').notNull(),
     unit: text('unit').$type<WeightUnit>().notNull(),
     weeklyGoal: integer('weekly_goal').notNull(),
-    defaultRestSec: integer('default_rest_sec').notNull(),
+    /**
+     * Deprecated: the global default rest was replaced by per-exercise rest on workout exercises
+     * (contract v2). Nullable and no longer written or synced, so a server still running the
+     * previous release keeps working after this migration; drop it in a later migration.
+     */
+    legacyDefaultRestSec: integer('default_rest_sec'),
     weekStart: text('week_start').$type<WeekStart>().notNull(),
     theme: text('theme').$type<Theme>().notNull(),
     preloadPrevious: boolean('preload_previous').notNull(),
@@ -155,6 +160,8 @@ export const workoutExercises = pgTable(
     exerciseId: text('exercise_id').notNull(),
     routineExerciseId: uuid('routine_exercise_id'),
     order: integer('order').notNull(),
+    /** Rest after each set; null = no rest timer. */
+    restSec: integer('rest_sec'),
     note: text('note').notNull(),
     supersetGroup: text('superset_group'),
   },

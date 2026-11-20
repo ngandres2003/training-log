@@ -6,9 +6,13 @@
  * Timestamps travel as ISO-8601 strings.
  */
 
-/** Bump when the wire format changes; the server refuses pushes below `MIN_SUPPORTED_CONTRACT_VERSION`. */
-export const CONTRACT_VERSION = 1
-export const MIN_SUPPORTED_CONTRACT_VERSION = 1
+/**
+ * Bump when the wire format changes; the server refuses pushes below `MIN_SUPPORTED_CONTRACT_VERSION`.
+ * v2: `workoutExercises.restSec` (per-exercise rest) is required and `settings.defaultRestSec` is gone,
+ * so v1 clients are told to update instead of having their workout exercises rejected.
+ */
+export const CONTRACT_VERSION = 2
+export const MIN_SUPPORTED_CONTRACT_VERSION = 2
 
 /** Most changes one push may carry; with full rows this stays well under the 4 MB body limit. */
 export const MAX_PUSH_CHANGES = 500
@@ -33,7 +37,6 @@ export const ROW_SPECS = {
     displayName: 'string',
     unit: ['kg', 'lb'],
     weeklyGoal: 'int',
-    defaultRestSec: 'int',
     weekStart: ['monday', 'sunday'],
     theme: ['dark', 'light', 'system'],
     preloadPrevious: 'boolean',
@@ -85,6 +88,7 @@ export const ROW_SPECS = {
     exerciseId: 'string',
     routineExerciseId: nullable('uuid'),
     order: 'int',
+    restSec: nullable('int'),
     note: 'string',
     supersetGroup: nullable('string'),
   },

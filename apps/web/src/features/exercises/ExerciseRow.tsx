@@ -83,7 +83,7 @@ export function ExerciseRow(props: ExerciseRowProps) {
           <span
             aria-hidden="true"
             className={`flex size-8 shrink-0 items-center justify-center rounded-md border-2 ${
-              checked ? 'border-sol bg-sol text-hierro' : 'border-concreto'
+              checked ? 'border-sol bg-sol text-tinta' : 'border-concreto'
             }`}
           >
             {checked && <Check className="size-5" strokeWidth={3} />}
