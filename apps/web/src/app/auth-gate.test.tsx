@@ -72,7 +72,9 @@ describe('auth gate', () => {
     expect(await screen.findByRole('heading', { name: 'Inicio' })).toBeInTheDocument()
     // The onboarding settings write is still in the outbox: 1 pending change.
     const indicator = await screen.findByRole('link', { name: /sin conexión/i })
-    expect(indicator).toHaveAccessibleName('Sincronización: sin conexión, 1 cambio pendiente')
+    await waitFor(() =>
+      expect(indicator).toHaveAccessibleName('Sincronización: sin conexión, 1 cambio pendiente'),
+    )
     expect(fetch).not.toHaveBeenCalled()
     expect(checkSession).not.toHaveBeenCalled()
   })
@@ -117,8 +119,11 @@ describe('authExpired', () => {
 
     const banner = await screen.findByRole('region', { name: 'Sesión caducada' })
     expect(banner).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /^Sincronización/ })).toHaveAccessibleName(
-      'Sincronización: pendiente, 1 cambio pendiente',
+    // The pending count comes from a live query that can resolve after the status on slow machines.
+    await waitFor(() =>
+      expect(screen.getByRole('link', { name: /^Sincronización/ })).toHaveAccessibleName(
+        'Sincronización: pendiente, 1 cambio pendiente',
+      ),
     )
     // Inicio still works: tabs navigate while the session is expired.
     await user.click(screen.getByRole('link', { name: 'Historial' }))
@@ -130,8 +135,11 @@ describe('authExpired', () => {
 
     await waitFor(() => expect(engine.status.getSnapshot().status).toBe('pending'))
     expect(screen.queryByRole('region', { name: 'Sesión caducada' })).not.toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /^Sincronización/ })).toHaveAccessibleName(
-      'Sincronización: pendiente, 1 cambio pendiente',
+    // The pending count comes from a live query that can resolve after the status on slow machines.
+    await waitFor(() =>
+      expect(screen.getByRole('link', { name: /^Sincronización/ })).toHaveAccessibleName(
+        'Sincronización: pendiente, 1 cambio pendiente',
+      ),
     )
   })
 
