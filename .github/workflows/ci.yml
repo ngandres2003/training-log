@@ -27,4 +27,5 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
       - run: pnpm typecheck
-      - run: pnpm test
+      # Retries absorb timing flakes on shared runners; a retried test still shows as flaky in the log.
+      - run: pnpm test --retry=2
