@@ -1,7 +1,6 @@
 import type { RouteObject } from 'react-router'
 import { exercisesRoutes } from '../features/exercises/routes'
 import { historyRoutes } from '../features/history/routes'
-import { moreRoutes } from '../features/more/routes'
 import { progressRoutes } from '../features/progress/routes'
 import { profileRoutes } from '../features/profile/routes'
 import { routinesRoutes } from '../features/routines/routes'
@@ -26,7 +25,6 @@ export const tabRoutes: RouteObject[] = [
   ...underTab('historial', historyRoutes),
   ...underTab('historial', sessionsRoutes),
   ...underTab('progreso', progressRoutes),
-  ...underTab('mas', moreRoutes),
   ...underTab('perfil', profileRoutes),
   ...underTab('perfil', exercisesRoutes),
 ]

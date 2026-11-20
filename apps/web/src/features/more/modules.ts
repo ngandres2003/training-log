@@ -7,7 +7,7 @@ export interface MoreModule {
   Icon: LucideIcon
 }
 
-/** Entries of the "Más" tab. Add new modules here; they show up as cards in this order. */
+/** Entries of the "Más" dropdown in the tab bar. Add new modules here; they show up in this order. */
 export const MORE_MODULES: MoreModule[] = [
   { to: '/perfil', label: 'Perfil', description: 'Ajustes, sincronización y tus datos', Icon: UserRound },
   {
