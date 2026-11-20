@@ -48,6 +48,7 @@ export default defineConfig({
   },
   server: {
     // Same origin in dev as in production: /api goes to the local Express process.
-    proxy: { '/api': 'http://localhost:3001' },
+    // `vite preview` inherits this; the e2e suite points it at its own API with API_PROXY_TARGET.
+    proxy: { '/api': process.env.API_PROXY_TARGET ?? 'http://localhost:3001' },
   },
 })
