@@ -137,7 +137,7 @@ export function ActiveWorkout({ workoutId }: { workoutId: Id }) {
         aria-modal="true"
         aria-label="Entreno activo"
         aria-hidden={showRest || undefined}
-        className="fixed inset-0 z-40 flex justify-center bg-hierro text-arena"
+        className="fixed inset-0 z-40 flex justify-center bg-hierro text-arena animate-slide-up"
       >
         <div className="flex h-full w-full max-w-[480px] flex-col">
           <header className="flex items-center gap-1 px-2 pt-[max(0.5rem,env(safe-area-inset-top))] pb-1">
@@ -184,12 +184,14 @@ export function ActiveWorkout({ workoutId }: { workoutId: Id }) {
                         className="flex min-h-12 min-w-0 flex-1 items-center"
                       >
                         <span
-                          className={`relative h-1.5 w-full overflow-hidden rounded-full ${
-                            i === current ? 'bg-borde-activo' : 'bg-concreto'
+                          className={`relative w-full overflow-hidden rounded-full transition-[height,background-color] duration-300 ease-suave ${
+                            i === current ? 'h-2 bg-borde-activo' : 'h-1.5 bg-concreto'
                           }`}
                         >
                           <span
-                            className={`absolute inset-y-0 left-0 ${i === current ? 'bg-sol' : 'bg-polvo'}`}
+                            className={`absolute inset-y-0 left-0 rounded-full transition-[width,background-color] duration-500 ease-suave ${
+                              i === current ? 'bg-sol' : 'bg-polvo'
+                            }`}
                             style={{ width: `${sets.length ? (done / sets.length) * 100 : 0}%` }}
                           />
                         </span>
@@ -231,7 +233,7 @@ export function ActiveWorkout({ workoutId }: { workoutId: Id }) {
               onScroll={onScroll}
               aria-label="Ejercicios"
               role="region"
-              className="flex min-h-0 flex-1 snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain px-4 py-2"
+              className="scrollbar-none flex min-h-0 flex-1 snap-x snap-mandatory items-start gap-3 overflow-x-auto overscroll-x-contain scroll-smooth px-4 py-2"
             >
               {model.blocks.map((block, i) => (
                 <ExerciseBlock
@@ -239,6 +241,7 @@ export function ActiveWorkout({ workoutId }: { workoutId: Id }) {
                   ref={(el) => {
                     slides.current[i] = el
                   }}
+                  current={i === current}
                   block={block}
                   position={i + 1}
                   count={blockCount}
@@ -259,7 +262,7 @@ export function ActiveWorkout({ workoutId }: { workoutId: Id }) {
 
           <footer className="flex items-center gap-2 border-t border-concreto px-2 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
             {resting ? (
-              <>
+              <div key="rest" className="flex flex-1 animate-rise items-center gap-2">
                 <button
                   type="button"
                   onClick={openRest}
@@ -272,9 +275,9 @@ export function ActiveWorkout({ workoutId }: { workoutId: Id }) {
                 <Button variant="secondary" aria-label="Sumar 15 segundos" onClick={() => void adjustRest(workoutId, 15)}>
                   +15
                 </Button>
-              </>
+              </div>
             ) : (
-              <>
+              <div key="nav" className="flex flex-1 animate-rise items-center gap-2">
                 <Button
                   variant="ghost"
                   aria-label="Ejercicio anterior"
@@ -295,7 +298,7 @@ export function ActiveWorkout({ workoutId }: { workoutId: Id }) {
                 >
                   <ChevronRight aria-hidden="true" className="size-6" />
                 </Button>
-              </>
+              </div>
             )}
           </footer>
         </div>

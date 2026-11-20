@@ -190,7 +190,7 @@ export function SetRow(props: SetRowProps) {
 
   return (
     <>
-      <tr aria-label={`Fila ${rowName}`} className={set.completed ? 'bg-sol/10' : undefined}>
+      <tr aria-label={`Fila ${rowName}`} className={`transition-colors duration-300 ease-suave ${set.completed ? 'bg-sol/10' : ''}`}>
         <td className="w-12 py-1 pl-1">
           <div className="flex flex-col items-center">
             <ActionMenu
@@ -227,7 +227,7 @@ export function SetRow(props: SetRowProps) {
                 onChange={(e) => setDrafts((d) => ({ ...d, [f.key]: e.target.value }))}
                 onBlur={() => commit(f.key)}
                 onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
-                className={`h-12 w-full min-w-0 rounded-lg bg-concreto px-1 text-center font-display text-lg text-arena placeholder:text-polvo ${
+                className={`h-12 w-full min-w-0 rounded-lg bg-concreto px-1 text-center font-display text-lg text-arena outline-none ring-sol transition-[box-shadow,background-color] duration-150 placeholder:text-polvo focus:bg-asfalto focus:ring-2 ${
                   f.key === 'rpe' ? 'max-w-12' : ''
                 }`}
               />
@@ -257,8 +257,8 @@ export function SetRow(props: SetRowProps) {
             aria-pressed={set.completed}
             disabled={!set.completed && !canComplete}
             onClick={toggle}
-            className={`inline-flex size-12 items-center justify-center rounded-lg disabled:opacity-40 ${
-              set.completed ? 'bg-sol text-tinta' : 'bg-concreto text-polvo'
+            className={`inline-flex size-12 items-center justify-center rounded-lg transition-[background-color,color,transform] duration-200 ease-suave active:scale-90 disabled:opacity-40 ${
+              set.completed ? 'animate-pop bg-sol text-tinta' : 'bg-concreto text-polvo'
             }`}
           >
             <Check aria-hidden="true" className="size-6" strokeWidth={set.completed ? 3 : 2} />
@@ -266,7 +266,7 @@ export function SetRow(props: SetRowProps) {
         </td>
       </tr>
       {active && !set.completed && steppable.length > 0 && (
-        <tr aria-label={`Ajustar fila ${rowName}`}>
+        <tr aria-label={`Ajustar fila ${rowName}`} className="animate-rise">
           <td colSpan={fields.length + 3} className="px-1 pb-2">
             <div className="flex gap-2">
               {steppable.map((f) => {

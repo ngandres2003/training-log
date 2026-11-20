@@ -17,7 +17,7 @@ export function Button({ variant = 'primary', className = '', type = 'button', .
   return (
     <button
       type={type}
-      className={`inline-flex min-h-12 min-w-12 items-center justify-center gap-2 rounded-lg px-4 disabled:opacity-50 ${VARIANTS[variant]} ${className}`}
+      className={`inline-flex min-h-12 min-w-12 items-center justify-center gap-2 rounded-lg px-4 transition-[transform,background-color,color,opacity] duration-150 ease-suave active:scale-[0.97] disabled:opacity-50 disabled:active:scale-100 ${VARIANTS[variant]} ${className}`}
       {...props}
     />
   )

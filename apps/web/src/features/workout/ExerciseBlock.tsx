@@ -154,8 +154,13 @@ export const ExerciseBlock = forwardRef<
     footer?: React.ReactNode
     /** Full-width card in a vertical list (V8's session editor) instead of a carousel slide. */
     stacked?: boolean
+    /** The slide in view; the others recede a little. Defaults to true. */
+    current?: boolean
   }
->(function ExerciseBlock({ block, position, count, unit, hasNextExercise, handlers, footer, stacked = false }, ref) {
+>(function ExerciseBlock(
+  { block, position, count, unit, hasNextExercise, handlers, footer, stacked = false, current = true },
+  ref,
+) {
   const [activeSetId, setActiveSetId] = useState<Id | null>(null)
   const rows = alternation(block)
   const first = block.exercises[0]!
@@ -227,7 +232,7 @@ export const ExerciseBlock = forwardRef<
     <Button
       key={e.we.id}
       variant="ghost"
-      className="w-full border border-dashed border-concreto text-arena uppercase"
+      className="w-full border border-dashed border-borde-activo text-arena uppercase hover:bg-concreto/40"
       onClick={() => handlers.onAddSet(e.we.id)}
     >
       <Plus aria-hidden="true" className="size-5" />
@@ -241,8 +246,14 @@ export const ExerciseBlock = forwardRef<
       role="group"
       aria-roledescription={stacked ? undefined : 'diapositiva'}
       aria-label={`${name} (${position} de ${count})`}
-      className={`flex flex-col gap-3 rounded-2xl border border-borde-fuerte bg-asfalto p-3 ${
-        stacked ? 'w-full' : 'max-h-full w-[calc(100%-1.75rem)] shrink-0 snap-center overflow-y-auto'
+      className={`flex flex-col gap-3 rounded-2xl border bg-asfalto p-3 transition-[opacity,transform,border-color,box-shadow] duration-300 ease-suave ${
+        stacked
+          ? 'w-full border-borde-fuerte'
+          : `scrollbar-none max-h-full w-[calc(100%-1.75rem)] shrink-0 snap-center overflow-y-auto ${
+              current
+                ? 'border-borde-activo shadow-[0_6px_24px_rgb(0_0_0/0.08)]'
+                : 'scale-[0.96] border-borde-fuerte opacity-50'
+            }`
       }`}
     >
       {block.superset ? (
@@ -257,7 +268,7 @@ export const ExerciseBlock = forwardRef<
         </>
       )}
       <div className="flex flex-col gap-2">{addButtons}</div>
-      {footer}
+      {footer && <div className="flex justify-center border-t border-concreto pt-2">{footer}</div>}
     </section>
   )
 })
