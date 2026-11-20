@@ -26,8 +26,17 @@ export interface AuthDeps {
  * Better Auth with email codes (U3, KTD3). Built from a factory so tests run it on PGlite
  * with a capturing mailer.
  */
+/**
+ * Production deployment, where sign-in codes are hashed at rest. Vercel sets NODE_ENV to
+ * `production` in preview deployments too, so there `VERCEL_ENV` decides.
+ */
+function isProductionDeployment(): boolean {
+  const vercelEnv = process.env.VERCEL_ENV
+  return vercelEnv ? vercelEnv === 'production' : process.env.NODE_ENV === 'production'
+}
+
 export function createAuth({ db, mailer, secret, baseURL }: AuthDeps) {
-  const production = process.env.NODE_ENV === 'production'
+  const production = isProductionDeployment()
   return betterAuth({
     secret: secret ?? process.env.BETTER_AUTH_SECRET,
     baseURL: baseURL ?? process.env.BETTER_AUTH_URL,
@@ -70,7 +79,7 @@ export function createAuth({ db, mailer, secret, baseURL }: AuthDeps) {
         otpLength: 6,
         expiresIn: 600,
         allowedAttempts: 5,
-        // Plain only outside production, so end-to-end tests can read codes (U18).
+        // Plain only outside production (previews included), so end-to-end tests can read codes (U18).
         storeOTP: production ? 'hashed' : 'plain',
         async sendVerificationOTP({ email, otp }) {
           await mailer.sendOtp({ email, otp })

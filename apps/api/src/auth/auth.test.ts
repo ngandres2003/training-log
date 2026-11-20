@@ -1,6 +1,6 @@
 import { eq } from 'drizzle-orm'
 import request from 'supertest'
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createApp } from '../app.js'
 import { session, user, verification } from '../db/schema.js'
 import { createTestDb, type TestDb } from '../db/test-db.js'
@@ -157,6 +157,51 @@ describe('email-code authentication', () => {
       expect((await sendCode(app, `u${i}@example.com`, '192.0.2.7')).status).toBe(200)
     }
     expect((await sendCode(app, 'u10@example.com', '192.0.2.7')).status).toBe(429)
+  })
+})
+
+describe('stored codes (U3 step 3, read by the U18 preview e2e run)', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs()
+  })
+
+  async function storedFor(email: string) {
+    const app = makeApp()
+    expect((await sendCode(app, email)).status).toBe(200)
+    const code = mailer.lastCodeFor(email)!
+    const [row] = await t.db
+      .select()
+      .from(verification)
+      .where(eq(verification.identifier, `sign-in-otp-${email}`))
+    return { code, value: row!.value }
+  }
+
+  it('stores the code in plain text in a Vercel preview, where NODE_ENV is also production', async () => {
+    vi.stubEnv('NODE_ENV', 'production')
+    vi.stubEnv('VERCEL_ENV', 'preview')
+    const { code, value } = await storedFor('ana@example.com')
+    expect(value).toBe(`${code}:0`)
+  })
+
+  it('stores the code in plain text in local and test runs', async () => {
+    vi.stubEnv('NODE_ENV', 'test')
+    vi.stubEnv('VERCEL_ENV', undefined)
+    const { code, value } = await storedFor('ana@example.com')
+    expect(value).toBe(`${code}:0`)
+  })
+
+  it('hashes the code in a Vercel production deployment', async () => {
+    vi.stubEnv('NODE_ENV', 'production')
+    vi.stubEnv('VERCEL_ENV', 'production')
+    const { code, value } = await storedFor('ana@example.com')
+    expect(value.startsWith(code)).toBe(false)
+  })
+
+  it('hashes the code in production outside Vercel', async () => {
+    vi.stubEnv('NODE_ENV', 'production')
+    vi.stubEnv('VERCEL_ENV', undefined)
+    const { code, value } = await storedFor('ana@example.com')
+    expect(value.startsWith(code)).toBe(false)
   })
 })
 
