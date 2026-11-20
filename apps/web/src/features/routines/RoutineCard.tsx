@@ -1,6 +1,6 @@
 import type { Routine } from '@training-log/domain'
 import { Play } from 'lucide-react'
-import { useEffect, useRef, type ReactNode } from 'react'
+import { useEffect, useRef, type CSSProperties, type ReactNode } from 'react'
 import { Link } from 'react-router'
 import { Menu, type MenuItem } from './components/Menu'
 import { relativeDay } from './format'
@@ -44,16 +44,17 @@ export function RoutineCard({
       ref={ref}
       aria-label={routine.name}
       data-highlighted={highlighted ? 'true' : undefined}
-      className={`flex overflow-hidden rounded-xl border bg-asfalto ${
-        highlighted ? 'border-sol ring-2 ring-sol' : 'border-concreto'
+      className={`flex overflow-hidden rounded-xl bg-asfalto transition-shadow duration-300 ${
+        highlighted ? 'neon ring-2 ring-sol' : 'neon-soft'
       }`}
+      style={{ '--neon': routine.color } as CSSProperties}
     >
       <span aria-hidden="true" className="w-1.5 shrink-0" style={{ backgroundColor: routine.color }} />
       <div className="flex min-w-0 flex-1 flex-col gap-1 py-3 pl-3">
         <div className="flex items-start gap-1">
           <Link to={`rutinas/${routine.id}`} className="flex min-h-12 min-w-0 flex-1 flex-col justify-center">
             <h3 className="truncate text-lg font-bold">
-              {position !== undefined && <span className="mr-1 font-display text-sol">{position}.</span>}
+              {position !== undefined && <span className="mr-1 font-display text-acento">{position}.</span>}
               {routine.name}
             </h3>
             <p className="truncate text-sm text-polvo">

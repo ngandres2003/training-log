@@ -22,23 +22,28 @@
   --borde-fuerte: #3a3832;
   --borde-activo: #4a4740;
   --fondo-superserie: #12120f;
+  --acento: #f6c026; /* accent text (timer, letters); same as Sol in dark */
   --tinta: #0e0e0c; /* text on Sol, Atardecer and routine colours, in both themes */
   color-scheme: dark;
 }
 
-/* Light variant (provisional until designed): same roles, warm paper background. */
+/*
+ * Light variant: cool neutral greys, pure white cards and a vivid yellow for fills. Yellow is too
+ * light for text on white, so text accents use the darker `--acento`.
+ */
 :root[data-theme='light'] {
-  --sol: #e0a300;
-  --atardecer: #e07316;
-  --arena: #1c1b18;
-  --polvo: #6b675d;
-  --hierro: #f7f4ec;
+  --sol: #ffc21a;
+  --acento: #8f5b00;
+  --atardecer: #c2530a;
+  --arena: #16181d;
+  --polvo: #5f6672;
+  --hierro: #f3f4f6;
   --asfalto: #ffffff;
-  --concreto: #e4dfd2;
-  --oceano: #1f86b8;
-  --borde-fuerte: #d6d0c1;
-  --borde-activo: #bdb6a5;
-  --fondo-superserie: #fbf6e6;
+  --concreto: #e7e9ee;
+  --oceano: #1a7fb5;
+  --borde-fuerte: #e1e4e9;
+  --borde-activo: #c4c9d1;
+  --fondo-superserie: #fff8e0;
   color-scheme: light;
 }
 
@@ -55,6 +60,7 @@
   --color-borde-activo: var(--borde-activo);
   --color-fondo-superserie: var(--fondo-superserie);
   --color-tinta: var(--tinta);
+  --color-acento: var(--acento);
   --font-display: 'Anton', sans-serif;
   --font-sans: 'Archivo', system-ui, sans-serif;
 }
@@ -118,4 +124,30 @@ body {
     transition-duration: 1ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/*
+ * Neon edge: a border in the element's own colour with a soft glow of the same colour.
+ * The colour comes from `--neon` (set inline, e.g. a routine's colour), Sol by default.
+ * The glow is stronger on the dark theme, where it reads as light; on light it stays a halo.
+ */
+:root,
+:root[data-theme='dark'] {
+  --neon-glow: 45%;
+}
+:root[data-theme='light'] {
+  --neon-glow: 30%;
+}
+@utility neon {
+  border-width: 1px;
+  border-color: var(--neon, var(--sol));
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--neon, var(--sol)) 35%, transparent),
+    0 0 14px color-mix(in srgb, var(--neon, var(--sol)) var(--neon-glow), transparent),
+    inset 0 0 10px color-mix(in srgb, var(--neon, var(--sol)) 8%, transparent);
+}
+@utility neon-soft {
+  border-width: 1px;
+  border-color: color-mix(in srgb, var(--neon, var(--sol)) 70%, transparent);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--neon, var(--sol)) calc(var(--neon-glow) * 0.6), transparent);
 }

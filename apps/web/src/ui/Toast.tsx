@@ -15,7 +15,7 @@ export function Toast({ children, action }: ToastProps) {
     >
       <span>{children}</span>
       {action && (
-        <button type="button" onClick={action.onClick} className="min-h-12 min-w-12 rounded-lg px-4 font-bold text-sol">
+        <button type="button" onClick={action.onClick} className="min-h-12 min-w-12 rounded-lg px-4 font-bold text-acento">
           {action.label}
         </button>
       )}

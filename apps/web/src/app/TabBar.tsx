@@ -20,7 +20,7 @@ export function TabBar() {
               end={end}
               className={({ isActive }) =>
                 `flex min-h-14 flex-col items-center justify-center gap-0.5 border-t-2 text-xs ${
-                  isActive ? 'border-sol font-bold text-sol' : 'border-transparent text-polvo'
+                  isActive ? 'border-sol font-bold text-acento' : 'border-transparent text-polvo'
                 }`
               }
             >

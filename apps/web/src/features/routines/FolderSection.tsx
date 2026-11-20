@@ -57,7 +57,7 @@ export function FolderSection({
           </button>
         </h3>
         {folder.isCycle && (
-          <span className="inline-flex items-center gap-1 rounded-full border border-sol px-2 py-0.5 text-xs font-bold text-sol">
+          <span className="inline-flex items-center gap-1 rounded-full border border-sol px-2 py-0.5 text-xs font-bold text-acento">
             <Repeat aria-hidden="true" className="size-3" />
             Ciclo
           </span>

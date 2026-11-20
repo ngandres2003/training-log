@@ -9,8 +9,8 @@ export function TipCard({ tips = TIPS }: { tips?: readonly Tip[] }) {
   if (!tip) return null
 
   return (
-    <section aria-labelledby="consejo" className="flex gap-3 rounded-xl bg-asfalto p-4">
-      <Lightbulb aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-sol" />
+    <section aria-labelledby="consejo" className="neon-soft flex gap-3 rounded-xl bg-asfalto p-4">
+      <Lightbulb aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-acento" />
       <div className="min-w-0 flex-1">
         <h2 id="consejo" className="text-xs font-bold tracking-wide text-polvo uppercase">
           Consejo

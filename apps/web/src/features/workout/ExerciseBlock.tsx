@@ -68,7 +68,7 @@ function ExerciseHeader({
             to={`/progreso/ejercicios/${we.exerciseId}`}
             className="line-clamp-2 min-h-6 text-lg leading-tight font-bold break-words"
           >
-            {exercise.letter && <span className="mr-1 font-display text-sol">{exercise.letter}</span>}
+            {exercise.letter && <span className="mr-1 font-display text-acento">{exercise.letter}</span>}
             {exercise.name}
           </Link>
           {muscles && <span className="truncate text-sm text-polvo">{muscles}</span>}
@@ -251,8 +251,8 @@ export const ExerciseBlock = forwardRef<
           ? 'w-full border-borde-fuerte'
           : `scrollbar-none max-h-full w-[calc(100%-1.75rem)] shrink-0 snap-center overflow-y-auto ${
               current
-                ? 'border-borde-activo shadow-[0_6px_24px_rgb(0_0_0/0.08)]'
-                : 'scale-[0.96] border-borde-fuerte opacity-50'
+                ? 'neon'
+                : 'neon-soft scale-[0.96] opacity-50'
             }`
       }`}
     >

@@ -1,6 +1,6 @@
 import type { Routine } from '@training-log/domain'
 import { Play } from 'lucide-react'
-import { useId } from 'react'
+import { useId, type CSSProperties } from 'react'
 import { Link } from 'react-router'
 
 /** "Toca hoy" (R10): the suggested routine with its own ▶ Iniciar. */
@@ -9,11 +9,12 @@ export function TodaySuggestion({ routine, onStart }: { routine: Routine; onStar
   return (
     <section
       aria-labelledby={titleId}
-      className="flex items-center gap-3 rounded-xl border border-sol/60 bg-asfalto p-3"
+      className="neon flex items-center gap-3 rounded-xl bg-asfalto p-3"
+      style={{ '--neon': routine.color } as CSSProperties}
     >
       <span aria-hidden="true" className="h-12 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: routine.color }} />
       <div className="min-w-0 flex-1">
-        <h2 id={titleId} className="text-sm font-bold text-sol uppercase">
+        <h2 id={titleId} className="text-sm font-bold text-acento uppercase">
           Toca hoy
         </h2>
         <Link to={`rutinas/${routine.id}`} className="block truncate font-display text-2xl uppercase">

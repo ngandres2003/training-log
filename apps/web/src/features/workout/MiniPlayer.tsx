@@ -31,12 +31,12 @@ function Player({ workout }: { workout: Workout }) {
       type="button"
       onClick={openWorkout}
       aria-label={`Volver al entreno ${workout.name}`}
-      className="mx-2 flex min-h-14 items-center gap-3 rounded-xl border border-concreto bg-asfalto px-4 py-2 text-left"
+      className="mx-2 flex min-h-14 items-center gap-3 neon rounded-xl bg-asfalto px-4 py-2 text-left"
     >
-      <Dumbbell aria-hidden="true" className="size-5 shrink-0 text-sol" />
+      <Dumbbell aria-hidden="true" className="size-5 shrink-0 text-acento" />
       <span className="flex min-w-0 flex-1 flex-col">
         <span className="truncate font-display text-lg leading-tight uppercase">{workout.name}</span>
-        <span className="font-display text-sol">{elapsedClock(now - Date.parse(workout.startedAt))}</span>
+        <span className="font-display text-acento">{elapsedClock(now - Date.parse(workout.startedAt))}</span>
       </span>
       {rest > 0 && (
         <span className="flex shrink-0 flex-col items-end">
@@ -66,7 +66,7 @@ function RecoveryBanner({ workout }: { workout: Workout }) {
         <h2 id="recovery-title" className="min-w-0 flex-1 font-bold">
           Tienes un entreno en curso
         </h2>
-        <span className="shrink-0 font-display text-sol">{elapsedClock(now - Date.parse(workout.startedAt))}</span>
+        <span className="shrink-0 font-display text-acento">{elapsedClock(now - Date.parse(workout.startedAt))}</span>
       </div>
       <p className="truncate text-sm text-polvo">{workout.name}</p>
       {stale && (

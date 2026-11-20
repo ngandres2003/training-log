@@ -134,7 +134,7 @@ export function Home() {
               <p className="text-lg font-bold">{settings.displayName ? `Hola, ${settings.displayName}` : 'Hola'}</p>
               <p className="text-sm text-polvo first-letter:uppercase">{dateFormat.format(new Date())}</p>
               <p className="mt-1 flex items-center gap-1 text-sm">
-                <Flame aria-hidden="true" className="size-4 text-sol" />
+                <Flame aria-hidden="true" className="size-4 text-acento" />
                 Racha: {streak.current} {streak.current === 1 ? 'semana' : 'semanas'}
               </p>
             </div>

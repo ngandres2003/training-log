@@ -109,7 +109,7 @@ export function EditSession() {
   const { data, model, lookup } = useSession(workoutId)
   const detail = `/historial/sesiones/${workoutId}`
   const done = (
-    <Link to={detail} className="inline-flex min-h-12 items-center rounded-lg px-3 font-bold text-sol">
+    <Link to={detail} className="inline-flex min-h-12 items-center rounded-lg px-3 font-bold text-acento">
       Listo
     </Link>
   )

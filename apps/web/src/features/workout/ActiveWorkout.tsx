@@ -151,7 +151,7 @@ export function ActiveWorkout({ workoutId }: { workoutId: Id }) {
             </button>
             <div className="flex min-w-0 flex-1 flex-col">
               <h1 className="truncate font-display text-xl leading-tight uppercase">{workout.name}</h1>
-              <span className="font-display text-sol" aria-label="Tiempo total">
+              <span className="font-display text-acento" aria-label="Tiempo total">
                 {elapsedClock(now - Date.parse(workout.startedAt))}
               </span>
             </div>
@@ -270,7 +270,7 @@ export function ActiveWorkout({ workoutId }: { workoutId: Id }) {
                   className="flex min-h-12 flex-1 items-center gap-3 rounded-lg bg-asfalto px-4"
                 >
                   <span className="text-xs font-bold text-polvo uppercase">Descanso</span>
-                  <span className="font-display text-2xl text-sol">{restClock(remaining)}</span>
+                  <span className="font-display text-2xl text-acento">{restClock(remaining)}</span>
                 </button>
                 <Button variant="secondary" aria-label="Sumar 15 segundos" onClick={() => void adjustRest(workoutId, 15)}>
                   +15
