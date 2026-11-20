@@ -39,7 +39,9 @@ describe('AccessScreen (VA)', () => {
   it('shows "Necesitas conexión" on first open without signal and no stored user', async () => {
     setOnline(false)
     render(<AccessScreen api={fakeAuthApi()} onSignedIn={() => {}} />)
-    expect(await screen.findByText('Necesitas conexión para entrar la primera vez')).toBeInTheDocument()
+    expect(
+      await screen.findByText('Necesitas conexión para entrar la primera vez'),
+    ).toBeInTheDocument()
     fireEvent.change(screen.getByLabelText('Contraseña'), { target: { value: 'secreto-largo' } })
     expect(screen.getByRole('button', { name: 'Entrar' })).toBeDisabled()
   })
@@ -58,7 +60,10 @@ describe('AccessScreen (VA)', () => {
   it('shows the wrong-password state and keeps the form', async () => {
     const onSignedIn = vi.fn()
     render(
-      <AccessScreen api={fakeAuthApi({ signIn: async () => ({ ok: false, reason: 'invalid' }) })} onSignedIn={onSignedIn} />,
+      <AccessScreen
+        api={fakeAuthApi({ signIn: async () => ({ ok: false, reason: 'invalid' }) })}
+        onSignedIn={onSignedIn}
+      />,
     )
     fillAndSubmit('ana@example.com', 'mala-contraseña')
     expect(await screen.findByRole('alert')).toHaveTextContent('Email o contraseña incorrectos.')
@@ -68,15 +73,26 @@ describe('AccessScreen (VA)', () => {
 
   it('shows a countdown after too many attempts and re-enables Entrar when it ends', async () => {
     vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval', 'Date'] })
-    const api = fakeAuthApi({ signIn: async () => ({ ok: false, reason: 'rate-limited', retryAfterSec: 90 }) })
+    const api = fakeAuthApi({
+      signIn: async () => ({ ok: false, reason: 'rate-limited', retryAfterSec: 90 }),
+    })
     render(<AccessScreen api={api} onSignedIn={() => {}} />)
     fillAndSubmit('ana@example.com', 'secreto-largo')
-    expect(await screen.findByRole('alert')).toHaveTextContent('Demasiados intentos. Vuelve a probar en 1:30')
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Demasiados intentos. Vuelve a probar en 1:30',
+    )
     expect(screen.getByRole('button', { name: 'Entrar' })).toBeDisabled()
 
     await act(async () => {
       vi.advanceTimersByTime(90_000)
     })
+    // The countdown interval starts in an effect that can land after the first jump on slow
+    // runners, so keep ticking (fake clock) until it notices the deadline has passed.
+    for (let i = 0; i < 5 && screen.queryByRole('alert'); i++) {
+      await act(async () => {
+        vi.advanceTimersByTime(1_000)
+      })
+    }
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Entrar' })).toBeEnabled()
   })
@@ -92,7 +108,13 @@ describe('ReauthSheet', () => {
           Completar serie
         </button>
         <p>Series: {sets}</p>
-        {open && <ReauthSheet api={api} onDismiss={() => setOpen(false)} onSignedIn={() => setOpen(false)} />}
+        {open && (
+          <ReauthSheet
+            api={api}
+            onDismiss={() => setOpen(false)}
+            onSignedIn={() => setOpen(false)}
+          />
+        )}
       </>
     )
   }
