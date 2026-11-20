@@ -4,10 +4,7 @@ import { Home } from './Home'
 import { RoutineDetail } from './RoutineDetail'
 import { RoutineEditor } from './RoutineEditor'
 
-/**
- * HOOK POINT for U13: starting or resuming a workout from the Inicio tab.
- * See ./start-workout for what it does today and what U13 adds (open V5).
- */
+/** Starting or resuming a workout from the Inicio tab: opens V5 (see ./start-workout). */
 export { onStartRoutine } from './start-workout'
 
 /** Inicio tab: V1 (index), V2, V3 (new / edit) and the archived routines list. */
