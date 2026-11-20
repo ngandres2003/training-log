@@ -1,9 +1,9 @@
 import type { RouteObject } from 'react-router'
 import { exercisesRoutes } from '../features/exercises/routes'
 import { historyRoutes } from '../features/history/routes'
+import { progressRoutes } from '../features/progress/routes'
 import { profileRoutes } from '../features/profile/routes'
 import { routinesRoutes } from '../features/routines/routes'
-import ProgresoPlaceholder from './placeholders/ProgresoPlaceholder'
 
 /** Prefixes a feature's routes with its tab path ('' for Inicio). */
 function underTab(tab: string, routes: RouteObject[]): RouteObject[] {
@@ -22,7 +22,7 @@ function underTab(tab: string, routes: RouteObject[]): RouteObject[] {
 export const tabRoutes: RouteObject[] = [
   ...underTab('', routinesRoutes),
   ...underTab('historial', historyRoutes),
-  { path: 'progreso', element: <ProgresoPlaceholder /> },
+  ...underTab('progreso', progressRoutes),
   ...underTab('perfil', profileRoutes),
   ...underTab('perfil', exercisesRoutes),
 ]
