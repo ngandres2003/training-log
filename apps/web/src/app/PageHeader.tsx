@@ -1,4 +1,6 @@
+import { UserRound } from 'lucide-react'
 import type { ReactNode } from 'react'
+import { NavLink } from 'react-router'
 import { SyncIndicator } from './SyncIndicator'
 
 export interface PageHeaderProps {
@@ -10,8 +12,8 @@ export interface PageHeaderProps {
 }
 
 /**
- * Header for every tab page and child view: Anton title plus the global sync indicator (R6),
- * which the spec places in the header of each tab.
+ * Header for every tab page and child view: Anton title, the global sync indicator (R6), which the
+ * spec places in the header of each tab, and the profile button.
  */
 export function PageHeader({ title, leading, actions }: PageHeaderProps) {
   return (
@@ -20,6 +22,20 @@ export function PageHeader({ title, leading, actions }: PageHeaderProps) {
       <h1 className="min-w-0 flex-1 truncate font-display text-3xl uppercase">{title}</h1>
       {actions}
       <SyncIndicator />
+      <NavLink
+        to="/perfil"
+        end
+        aria-label="Perfil"
+        className={({ isActive }) =>
+          `inline-flex size-12 shrink-0 items-center justify-center rounded-full transition-transform duration-150 active:scale-90 ${
+            isActive ? 'text-acento' : 'text-arena'
+          }`
+        }
+      >
+        <span className="neon-soft flex size-9 items-center justify-center rounded-full bg-asfalto">
+          <UserRound aria-hidden="true" className="size-5" />
+        </span>
+      </NavLink>
     </header>
   )
 }

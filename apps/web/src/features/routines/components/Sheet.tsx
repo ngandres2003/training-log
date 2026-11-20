@@ -16,13 +16,13 @@ export function Sheet({
   const titleId = useId()
   const textId = useId()
   return (
-    <div className="fixed inset-0 z-[60] flex items-end justify-center bg-hierro/80">
+    <div className="fixed inset-0 z-[60] flex items-end justify-center bg-hierro/80 animate-fade-in">
       <section
         role={alert ? 'alertdialog' : 'dialog'}
         aria-modal="true"
         aria-labelledby={titleId}
         aria-describedby={description ? textId : undefined}
-        className="flex max-h-[85dvh] w-full max-w-[480px] flex-col gap-4 overflow-y-auto rounded-t-2xl bg-asfalto px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))]"
+        className="flex max-h-[85dvh] w-full max-w-[480px] flex-col gap-4 overflow-y-auto rounded-t-2xl bg-asfalto px-4 shadow-[0_-8px_32px_rgb(0_0_0/0.18)] animate-slide-up pt-4 pb-[max(1rem,env(safe-area-inset-bottom))]"
       >
         <h2 id={titleId} className="font-display text-2xl uppercase">
           {title}

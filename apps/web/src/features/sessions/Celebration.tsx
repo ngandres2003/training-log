@@ -53,8 +53,8 @@ export function Celebration({ workoutId }: { workoutId: Id }) {
     >
       <div className="flex h-full w-full max-w-[480px] flex-col justify-center gap-6 px-6 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))]">
         <div className="flex flex-col items-center gap-2 text-center">
-          <Trophy aria-hidden="true" className="size-14 text-sol motion-safe:animate-bounce" />
-          <p className="font-display text-4xl text-sol uppercase">¡Entreno guardado!</p>
+          <Trophy aria-hidden="true" className="size-14 text-acento motion-safe:animate-bounce" />
+          <p className="font-display text-4xl text-acento uppercase">¡Entreno guardado!</p>
           <h1 className="font-display text-2xl uppercase">{data.workout.name}</h1>
           <p className="text-polvo">{date}</p>
         </div>

@@ -38,7 +38,7 @@ export function AppLayout() {
           className="flex items-center justify-between gap-3 border-b border-sol/40 bg-asfalto py-1 pr-1 pl-4 text-sm"
         >
           <p>Tu sesión ha caducado. Tus entrenos siguen guardados aquí.</p>
-          <Button variant="ghost" className="shrink-0 text-sol" onClick={() => setReauthOpen(true)}>
+          <Button variant="ghost" className="shrink-0 text-acento" onClick={() => setReauthOpen(true)}>
             Volver a entrar
           </Button>
         </section>

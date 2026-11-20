@@ -329,7 +329,7 @@ function ExerciseCard({
         <h2 id={titleId} className="min-w-0 flex-1 truncate font-bold">
           {name}
         </h2>
-        {inSuperset && <span className="text-xs font-bold text-sol uppercase">Superserie</span>}
+        {inSuperset && <span className="text-xs font-bold text-acento uppercase">Superserie</span>}
         <button
           type="button"
           aria-label="Quitar ejercicio"

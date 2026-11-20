@@ -6,7 +6,7 @@ import { getSettings } from '../data/repositories/settings'
 /** localStorage key read by the pre-paint script in index.html. */
 const STORAGE_KEY = 'tl-theme'
 const DEFAULT_THEME: Theme = 'light'
-const BAR_COLOR = { light: '#f7f4ec', dark: '#0e0e0c' } as const
+const BAR_COLOR = { light: '#f3f4f6', dark: '#0e0e0c' } as const
 
 function systemPrefersDark(): boolean {
   return typeof matchMedia === 'function' && matchMedia('(prefers-color-scheme: dark)').matches

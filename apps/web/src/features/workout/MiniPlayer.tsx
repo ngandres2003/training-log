@@ -13,7 +13,7 @@ import { discardWorkout, isStale, saveStaleWorkout } from './workout-actions'
 /**
  * Bottom-stack slot of the active workout, just above the tab bar:
  * - at app start (the workout was not opened in this page session), the F5 recovery banner;
- * - once minimized, the mini-player (routine name, chronometer and remaining rest).
+ * - once minimized, a floating pill over the tab bar (chronometer, or remaining rest).
  * Nothing while V5 is expanded or when there is no active workout.
  */
 export function MiniPlayer() {
@@ -26,24 +26,34 @@ export function MiniPlayer() {
 function Player({ workout }: { workout: Workout }) {
   const now = useNow()
   const rest = remainingRestMs(workout.restEndsAt, now)
+  const resting = rest > 0
+  const elapsed = elapsedClock(now - Date.parse(workout.startedAt))
+  // A small floating pill over the bottom-right corner: the clock, or the rest countdown while
+  // resting. The routine name stays in the accessible name.
   return (
     <button
       type="button"
       onClick={openWorkout}
-      aria-label={`Volver al entreno ${workout.name}`}
-      className="mx-2 flex min-h-14 items-center gap-3 rounded-xl border border-concreto bg-asfalto px-4 py-2 text-left"
+      aria-label={`Volver al entreno ${workout.name}, ${elapsed}${resting ? `, descanso ${restClock(rest)}` : ''}`}
+      className="neon absolute right-3 bottom-full mb-3 flex h-12 animate-rise items-center gap-2 rounded-full bg-asfalto pr-4 pl-1.5 transition-transform duration-150 active:scale-95"
     >
-      <Dumbbell aria-hidden="true" className="size-5 shrink-0 text-sol" />
-      <span className="flex min-w-0 flex-1 flex-col">
-        <span className="truncate font-display text-lg leading-tight uppercase">{workout.name}</span>
-        <span className="font-display text-sol">{elapsedClock(now - Date.parse(workout.startedAt))}</span>
+      <span
+        aria-hidden="true"
+        className="relative flex size-9 shrink-0 items-center justify-center rounded-full bg-sol text-tinta"
+      >
+        <span className="absolute inset-0 rounded-full bg-sol opacity-60 motion-safe:animate-ping [animation-duration:2s]" />
+        <Dumbbell className="relative size-4" />
       </span>
-      {rest > 0 && (
-        <span className="flex shrink-0 flex-col items-end">
-          <span className="text-xs font-bold text-polvo uppercase">Descanso</span>
-          <span className="font-display text-xl">{restClock(rest)}</span>
-        </span>
-      )}
+      <span aria-hidden="true" className="flex flex-col items-start leading-none">
+        {resting ? (
+          <>
+            <span className="text-[10px] font-bold tracking-wide text-polvo uppercase">Descanso</span>
+            <span className="font-display text-lg text-acento">{restClock(rest)}</span>
+          </>
+        ) : (
+          <span className="font-display text-lg text-acento">{elapsed}</span>
+        )}
+      </span>
     </button>
   )
 }
@@ -66,7 +76,7 @@ function RecoveryBanner({ workout }: { workout: Workout }) {
         <h2 id="recovery-title" className="min-w-0 flex-1 font-bold">
           Tienes un entreno en curso
         </h2>
-        <span className="shrink-0 font-display text-sol">{elapsedClock(now - Date.parse(workout.startedAt))}</span>
+        <span className="shrink-0 font-display text-acento">{elapsedClock(now - Date.parse(workout.startedAt))}</span>
       </div>
       <p className="truncate text-sm text-polvo">{workout.name}</p>
       {stale && (

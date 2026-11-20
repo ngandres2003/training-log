@@ -17,7 +17,7 @@ export function NumberStepper({
         type="button"
         aria-label={`Restar ${label}`}
         onClick={() => onStep(-1)}
-        className="inline-flex size-12 shrink-0 items-center justify-center rounded-lg text-arena"
+        className="inline-flex size-12 shrink-0 items-center justify-center rounded-lg text-arena transition-transform duration-150 active:scale-90"
       >
         <Minus aria-hidden="true" className="size-5" />
       </button>
@@ -28,7 +28,7 @@ export function NumberStepper({
         type="button"
         aria-label={`Sumar ${label}`}
         onClick={() => onStep(1)}
-        className="inline-flex size-12 shrink-0 items-center justify-center rounded-lg text-arena"
+        className="inline-flex size-12 shrink-0 items-center justify-center rounded-lg text-arena transition-transform duration-150 active:scale-90"
       >
         <Plus aria-hidden="true" className="size-5" />
       </button>

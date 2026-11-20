@@ -7,7 +7,7 @@ import { useShell } from './shell'
 const VISUAL: Record<IndicatorState['state'], { label: string; Icon: typeof CloudCheck; color: string }> = {
   // Shape distinguishes the state, not only color (design: check / arrow / crossed cloud).
   sincronizado: { label: 'sincronizado', Icon: CloudCheck, color: 'text-polvo' },
-  pendiente: { label: 'pendiente', Icon: CloudUpload, color: 'text-sol' },
+  pendiente: { label: 'pendiente', Icon: CloudUpload, color: 'text-acento' },
   'sin-conexion': { label: 'sin conexión', Icon: CloudOff, color: 'text-arena' },
 }
 

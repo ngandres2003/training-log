@@ -156,7 +156,7 @@ export function CreateExercise({
                 setPhoto(null)
                 setImageUrl(null)
               }}
-              className="min-h-12 self-start text-sm font-medium text-sol"
+              className="min-h-12 self-start text-sm font-medium text-acento"
             >
               Quitar foto
             </button>

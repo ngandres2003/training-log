@@ -57,7 +57,7 @@ export function OtherRoutineChip({
           </p>
           <Link
             to={`/progreso/ejercicios/${exerciseId}`}
-            className="inline-flex min-h-12 items-center font-bold text-sol uppercase"
+            className="inline-flex min-h-12 items-center font-bold text-acento uppercase"
           >
             Ver historial
           </Link>
