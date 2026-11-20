@@ -30,7 +30,8 @@ export function createApp(deps: AppDeps = {}): Express {
   const getAdminEmails = () => deps.adminEmails ?? adminEmailsFromEnv()
 
   app.get('/api/health', (_req, res) => {
-    res.json({ ok: true })
+    // `version` lets CI wait until a deployment serves a given commit (Vercel sets the SHA).
+    res.json({ ok: true, version: process.env.VERCEL_GIT_COMMIT_SHA ?? null })
   })
 
   // Better Auth reads the raw body itself, so it is mounted before any JSON parser.
