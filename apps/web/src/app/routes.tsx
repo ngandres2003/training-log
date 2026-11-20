@@ -4,6 +4,7 @@ import { historyRoutes } from '../features/history/routes'
 import { progressRoutes } from '../features/progress/routes'
 import { profileRoutes } from '../features/profile/routes'
 import { routinesRoutes } from '../features/routines/routes'
+import { sessionsRoutes } from '../features/sessions/routes'
 
 /** Prefixes a feature's routes with its tab path ('' for Inicio). */
 function underTab(tab: string, routes: RouteObject[]): RouteObject[] {
@@ -22,6 +23,7 @@ function underTab(tab: string, routes: RouteObject[]): RouteObject[] {
 export const tabRoutes: RouteObject[] = [
   ...underTab('', routinesRoutes),
   ...underTab('historial', historyRoutes),
+  ...underTab('historial', sessionsRoutes),
   ...underTab('progreso', progressRoutes),
   ...underTab('perfil', profileRoutes),
   ...underTab('perfil', exercisesRoutes),

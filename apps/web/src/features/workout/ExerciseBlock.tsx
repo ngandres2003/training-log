@@ -146,8 +146,10 @@ export const ExerciseBlock = forwardRef<
     hasNextExercise: (workoutExerciseId: Id) => boolean
     handlers: ExerciseBlockHandlers
     footer?: React.ReactNode
+    /** Full-width card in a vertical list (V8's session editor) instead of a carousel slide. */
+    stacked?: boolean
   }
->(function ExerciseBlock({ block, position, count, unit, hasNextExercise, handlers, footer }, ref) {
+>(function ExerciseBlock({ block, position, count, unit, hasNextExercise, handlers, footer, stacked = false }, ref) {
   const [activeSetId, setActiveSetId] = useState<Id | null>(null)
   const rows = alternation(block)
   const first = block.exercises[0]!
@@ -231,9 +233,11 @@ export const ExerciseBlock = forwardRef<
     <section
       ref={ref}
       role="group"
-      aria-roledescription="diapositiva"
+      aria-roledescription={stacked ? undefined : 'diapositiva'}
       aria-label={`${name} (${position} de ${count})`}
-      className="flex max-h-full w-[calc(100%-1.75rem)] shrink-0 snap-center flex-col gap-3 overflow-y-auto rounded-2xl border border-borde-fuerte bg-asfalto p-3"
+      className={`flex flex-col gap-3 rounded-2xl border border-borde-fuerte bg-asfalto p-3 ${
+        stacked ? 'w-full' : 'max-h-full w-[calc(100%-1.75rem)] shrink-0 snap-center overflow-y-auto'
+      }`}
     >
       {block.superset ? (
         <SupersetGroup>
