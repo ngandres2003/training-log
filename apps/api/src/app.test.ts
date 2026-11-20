@@ -6,7 +6,7 @@ describe('api app', () => {
   it('answers health checks', async () => {
     const res = await request(createApp()).get('/api/health')
     expect(res.status).toBe(200)
-    expect(res.body).toEqual({ ok: true })
+    expect(res.body).toMatchObject({ ok: true })
   })
 
   it('returns a JSON 404 for unknown api routes instead of the SPA', async () => {

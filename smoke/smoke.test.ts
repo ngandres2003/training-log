@@ -62,7 +62,7 @@ describe.skipIf(!BASE_URL)(`smoke: ${BASE_URL || '(SMOKE_BASE_URL not set)'}`, (
     it('is healthy', async () => {
       const res = await get('/api/health')
       expect(res.status).toBe(200)
-      expect(await res.json()).toEqual({ ok: true })
+      expect(await res.json()).toMatchObject({ ok: true })
     })
 
     it('answers unknown API paths with a JSON 404, not the SPA', async () => {

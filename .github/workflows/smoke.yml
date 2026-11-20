@@ -1,24 +1,34 @@
 name: Smoke
 
-# Runs after Vercel reports a successful deployment (preview or production) through the
-# GitHub integration, against that deployment's URL. Read-only: it creates nothing.
+# After a push to main, Vercel deploys production. This waits until the production URL serves
+# that exact commit (/api/health returns its SHA), then runs the read-only smoke tests against
+# it. A failure means production is broken: roll back with Instant Rollback in Vercel.
 on:
-  deployment_status:
+  push:
+    branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read
 
+env:
+  PRODUCTION_URL: https://training-log-taupe.vercel.app
+
 jobs:
   smoke:
-    # Fixed name: Vercel Deployment Checks match this job by name to gate production.
     name: Smoke tests
-    if: github.event.deployment_status.state == 'success'
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.deployment.sha }}
+      - name: Esperar a que producción sirva este commit
+        run: |
+          for i in $(seq 1 60); do
+            v=$(curl -fsS "$PRODUCTION_URL/api/health" | sed -n 's/.*"version":"\([^"]*\)".*/\1/p' || true)
+            if [ "$v" = "$GITHUB_SHA" ]; then echo "Desplegado $v"; exit 0; fi
+            echo "Producción en '${v:-?}', esperando $GITHUB_SHA…"; sleep 15
+          done
+          echo "Producción no llegó a este commit en 15 min (¿falló el CI o el build?)"; exit 1
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
@@ -27,6 +37,4 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm test:smoke
         env:
-          SMOKE_BASE_URL: ${{ github.event.deployment_status.environment_url }}
-          # Repository secret; only needed while previews are behind Deployment Protection.
-          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+          SMOKE_BASE_URL: ${{ env.PRODUCTION_URL }}
