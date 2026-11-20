@@ -1,16 +1,16 @@
 import { expect, test } from '@playwright/test'
-import { completeOnboarding, serverRows, signIn, syncIndicator, uniqueEmail } from './support'
+import { acceptInvite, completeOnboarding, serverRows, syncIndicator, uniqueEmail } from './support'
 
-// F1, R3, R4: VA → code → V0 in 3 steps → empty Inicio.
-test('first open: the emailed code leads through onboarding to an empty Inicio', async ({
+// F1, R3, R4: invite link → password → V0 in 3 steps → empty Inicio.
+test('first open: an invite link leads through onboarding to an empty Inicio', async ({
   page,
 }) => {
   await page.goto('/')
   await expect(page.getByRole('heading', { name: 'Training Log' })).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Enviar código' })).toBeEnabled()
+  await expect(page.getByLabel('Contraseña')).toBeVisible()
 
   const email = uniqueEmail('first-open')
-  await signIn(page, email)
+  await acceptInvite(page, email)
   await completeOnboarding(page, 'Ana')
 
   await expect(page.getByText('Hola, Ana')).toBeVisible()
@@ -25,7 +25,7 @@ test('first open: the emailed code leads through onboarding to an empty Inicio',
     )
     .not.toBeNull()
 
-  // The session survives a reload: no second code.
+  // The session survives a reload: no password again.
   await page.reload()
   await expect(page.getByRole('heading', { name: 'Inicio', level: 1 })).toBeVisible()
 })

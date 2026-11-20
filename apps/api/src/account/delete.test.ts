@@ -5,7 +5,7 @@ import request from 'supertest'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { createApp } from '../app.js'
 import { createAuth } from '../auth/auth.js'
-import { createTestMailer, type TestMailer } from '../auth/mailer.js'
+import { signInForTest, TEST_BASE_URL, TEST_SECRET } from '../auth/test-helpers.js'
 import { requireSession } from '../auth/require-session.js'
 import { user } from '../db/auth-schema.js'
 import { syncTables } from '../db/queries.js'
@@ -14,8 +14,8 @@ import { createTestDb, type TestDb } from '../db/test-db.js'
 import type { BlobClient } from './delete.js'
 import { createAccountRouter } from './router.js'
 
-const BASE_URL = 'http://localhost:3000'
-const SECRET = 'test-secret-0123456789-abcdefghijklmnop'
+const BASE_URL = TEST_BASE_URL
+const SECRET = TEST_SECRET
 const NOW = '2026-11-19T10:00:00.000Z'
 
 /** In-memory Blob store; `list` pages two at a time so pagination is exercised. */
@@ -42,7 +42,6 @@ function createFakeBlob(pathnames: string[]): BlobClient & { pathnames: Set<stri
 }
 
 let t: TestDb
-let mailer: TestMailer
 let app: express.Express
 let blob: ReturnType<typeof createFakeBlob>
 
@@ -51,20 +50,8 @@ interface Device {
   cookie: string
 }
 
-async function signIn(email: string): Promise<Device> {
-  await request(app)
-    .post('/api/auth/email-otp/send-verification-otp')
-    .set('Origin', BASE_URL)
-    .send({ email, type: 'sign-in' })
-  const res = await request(app)
-    .post('/api/auth/sign-in/email-otp')
-    .set('Origin', BASE_URL)
-    .send({ email, otp: mailer.lastCodeFor(email) })
-  expect(res.status).toBe(200)
-  const raw = res.headers['set-cookie'] as unknown as string[]
-  const cookie = raw.map((c) => c.split(';')[0]).join('; ')
-  const me = await request(app).get('/api/me').set('Cookie', cookie)
-  return { id: me.body.user.id as string, cookie }
+function signIn(email: string): Promise<Device> {
+  return signInForTest(app, t.db, email)
 }
 
 let seq = 0
@@ -141,8 +128,7 @@ async function countRows(userId: string): Promise<number> {
 
 beforeEach(async () => {
   t = await createTestDb()
-  mailer = createTestMailer()
-  const auth = createAuth({ db: t.db, mailer, secret: SECRET, baseURL: BASE_URL })
+  const auth = createAuth({ db: t.db, secret: SECRET, baseURL: BASE_URL })
   blob = createFakeBlob([])
   app = express()
   app.use(

@@ -1,10 +1,12 @@
 import { useEffect, useState, type ReactNode } from 'react'
+import { useLocation } from 'react-router'
 import type { Settings } from '@training-log/domain'
 import type { LastKnownUser } from '../data/db'
 import { getSettings } from '../data/repositories/settings'
 import { requestPersistentStorage } from '../data/storage'
 import { getLastKnownUser } from '../data/syncMeta'
 import { AccessScreen } from '../features/auth/AccessScreen'
+import type { FreshSignInState } from '../features/auth/InvitationPage'
 import { Onboarding } from '../features/onboarding/Onboarding'
 import { useShell } from './shell'
 
@@ -25,23 +27,31 @@ async function phaseFor(user: LastKnownUser): Promise<Phase> {
  * - a last known user in Dexie opens the app without contacting the server (works offline);
  * - no stored user shows VA; after a first sign-in, one sync cycle runs so an existing
  *   account's settings arrive before deciding on onboarding;
- * - V0 runs until the user's settings have `onboardedAt`.
+ * - V0 runs until the user's settings have `onboardedAt`;
+ * - arriving from the invitation page (`FreshSignInState`) runs that first sync cycle too.
  * Sync triggers start once the user is known.
  */
 export function AuthGate({ children }: { children: ReactNode }) {
   const { engine, authApi, startSync } = useShell()
   const [phase, setPhase] = useState<Phase>({ kind: 'loading' })
+  const freshSignIn = !!(useLocation().state as Partial<FreshSignInState> | null)?.freshSignIn
   const userId = phase.kind === 'loading' || phase.kind === 'signed-out' ? null : phase.user.id
 
   useEffect(() => {
     let alive = true
     void getLastKnownUser().then(async (user) => {
+      if (user && freshSignIn) {
+        if (alive) await signedIn(user)
+        return
+      }
       const next = user ? await phaseFor(user) : ({ kind: 'signed-out' } as const)
       if (alive) setPhase(next)
     })
     return () => {
       alive = false
     }
+    // Decided once, on mount.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {

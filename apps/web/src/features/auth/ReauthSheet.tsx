@@ -2,13 +2,13 @@ import { useEffect, useId, useState } from 'react'
 import type { LastKnownUser } from '../../data/db'
 import { getLastKnownUser } from '../../data/syncMeta'
 import { authApi, ensureSameUser, type AuthApi } from './auth-client'
-import { CodeStep } from './CodeStep'
+import { PasswordForm } from './PasswordForm'
 
 export interface ReauthSheetProps {
   /** Closes the sheet; the screen underneath stays usable and logging keeps working (R5). */
   onDismiss: () => void
   /**
-   * Called after the code is verified. `sameUser` is false when the session belongs to a
+   * Called after the password is accepted. `sameUser` is false when the session belongs to a
    * different account than the stored one: the caller must stop sync and sign out (U15).
    */
   onSignedIn: (user: LastKnownUser, sameUser: boolean) => void
@@ -17,7 +17,7 @@ export interface ReauthSheetProps {
 
 /**
  * Re-auth after `authExpired` (U3 step 7): a non-blocking bottom sheet over the current
- * screen, email locked to the last known user, starting at the code step.
+ * screen, asking for the password with the email locked to the last known user.
  */
 export function ReauthSheet({ onDismiss, onSignedIn, api = authApi }: ReauthSheetProps) {
   const titleId = useId()
@@ -59,7 +59,7 @@ export function ReauthSheet({ onDismiss, onSignedIn, api = authApi }: ReauthShee
       <p className="text-sm text-polvo">
         Tu sesión ha caducado. Tus entrenos siguen guardados en este móvil y se sincronizarán al entrar.
       </p>
-      {known && <CodeStep email={known.email} api={api} onVerified={verified} sendOnMount />}
+      {known && <PasswordForm lockedEmail={known.email} api={api} onSignedIn={verified} />}
     </section>
   )
 }

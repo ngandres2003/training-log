@@ -5,10 +5,10 @@ import { defineConfig, devices } from '@playwright/test'
  *
  * - Local (default): builds the SPA for production, serves it with `vite preview` on one origin
  *   that proxies `/api` to a test-only API process (`apps/api/src/e2e-server.ts`): the real app on
- *   an in-memory Postgres (PGlite) with a mailer sink that the specs read codes from.
- * - Preview: set `BASE_URL` to a deployed preview. Codes are read from that deployment's database
- *   (`E2E_DATABASE_URL`, the preview's Neon branch; codes are stored in plain text outside
- *   production), and `VERCEL_AUTOMATION_BYPASS_SECRET` is sent to pass Deployment Protection.
+ *   an in-memory Postgres (PGlite) with a test route that mints invite links for the specs.
+ * - Preview: set `BASE_URL` to a deployed preview. Invites are inserted straight into that
+ *   deployment's database (`E2E_DATABASE_URL`, the preview's Neon branch), and
+ *   `VERCEL_AUTOMATION_BYPASS_SECRET` is sent to pass Deployment Protection.
  *   See docs/deploy.md.
  */
 const WEB_PORT = 4174

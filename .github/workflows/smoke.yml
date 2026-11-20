@@ -1,0 +1,32 @@
+name: Smoke
+
+# Runs after Vercel reports a successful deployment (preview or production) through the
+# GitHub integration, against that deployment's URL. Read-only: it creates nothing.
+on:
+  deployment_status:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    # Fixed name: Vercel Deployment Checks match this job by name to gate production.
+    name: Smoke tests
+    if: github.event.deployment_status.state == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.deployment.sha }}
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test:smoke
+        env:
+          SMOKE_BASE_URL: ${{ github.event.deployment_status.environment_url }}
+          # Repository secret; only needed while previews are behind Deployment Protection.
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}

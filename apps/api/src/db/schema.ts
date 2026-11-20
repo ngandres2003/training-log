@@ -204,3 +204,4 @@ export const customExercises = pgTable(
 )
 
 export * from './auth-schema.js'
+export * from './invites-schema.js'

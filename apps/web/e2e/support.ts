@@ -1,70 +1,56 @@
 import { neon } from '@neondatabase/serverless'
+import { createHash, randomBytes, randomUUID } from 'node:crypto'
 import { expect, type APIRequestContext, type Page } from '@playwright/test'
 
 /** Running against a deployed preview (`BASE_URL`) rather than the local build. */
 export const remote = !!process.env.BASE_URL
 
-/**
- * A fresh address per test. Locally any domain works (the mailer is a sink). Against a preview the
- * code is really sent through Resend, so the default is Resend's test inbox, which accepts any
- * `+label`; `E2E_EMAIL_DOMAIN` overrides it with a domain you control.
- */
+/** The password every e2e account gets. */
+export const E2E_PASSWORD = 'e2e-contraseña-segura'
+
+/** A fresh address per test. No email is ever sent, so any domain works. */
 export function uniqueEmail(tag: string): string {
   const id = `${tag}-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`
-  if (!remote) return `${id}@example.com`
-  const domain = process.env.E2E_EMAIL_DOMAIN
-  return domain ? `e2e-${id}@${domain}` : `delivered+${id}@resend.dev`
-}
-
-/** Latest sign-in code for `email`: the local mailer sink, or the preview database. */
-async function readCode(request: APIRequestContext, email: string): Promise<string> {
-  let code: string | undefined
-  await expect
-    .poll(
-      async () => {
-        code = remote ? await readCodeFromDatabase(email) : await readCodeFromSink(request, email)
-        return code
-      },
-      { message: `sign-in code for ${email}`, timeout: 15_000 },
-    )
-    .toMatch(/^\d{6}$/)
-  return code!
-}
-
-async function readCodeFromSink(
-  request: APIRequestContext,
-  email: string,
-): Promise<string | undefined> {
-  const res = await request.get(`/api/__e2e/otp?email=${encodeURIComponent(email)}`)
-  if (!res.ok()) return undefined
-  return ((await res.json()) as { code: string }).code
+  return `e2e-${id}@example.com`
 }
 
 /**
- * Better Auth's email-OTP plugin stores `<code>:<attempts>` under `sign-in-otp-<email>` in the
- * `verification` table, in plain text outside production (U3 step 3).
+ * An invite link path (`/invitacion/<token>`) for `email`, as an admin would generate it: locally
+ * from the e2e API's test route; against a preview, inserted straight into its database
+ * (`E2E_DATABASE_URL`) with the same shape `apps/api/src/invites/invites.ts` writes.
  */
-async function readCodeFromDatabase(email: string): Promise<string | undefined> {
+export async function mintInvite(request: APIRequestContext, email: string): Promise<string> {
+  if (!remote) {
+    const res = await request.post('/api/__e2e/invite', { data: { email } })
+    expect(res.ok(), `e2e invite returned ${res.status()}`).toBe(true)
+    return ((await res.json()) as { path: string }).path
+  }
   const url = process.env.E2E_DATABASE_URL
   if (!url)
     throw new Error('E2E_DATABASE_URL (the preview Neon branch) is required when BASE_URL is set')
-  const sql = neon(url)
-  const rows = (await sql.query(
-    'select value from verification where identifier = $1 order by created_at desc limit 1',
-    [`sign-in-otp-${email}`],
-  )) as { value: string }[]
-  const value = rows[0]?.value
-  return value ? value.slice(0, value.lastIndexOf(':')) : undefined
+  const token = randomBytes(32).toString('base64url')
+  const tokenHash = createHash('sha256').update(token).digest('hex')
+  await neon(url).query(
+    `insert into invites (id, email, token_hash, expires_at) values ($1, $2, $3, now() + interval '7 days')`,
+    [randomUUID(), email.toLowerCase(), tokenHash],
+  )
+  return `/invitacion/${token}`
 }
 
-/** VA: email → code → signed in. Leaves the page on V0 (new account) or Inicio. */
-export async function signIn(page: Page, email: string): Promise<void> {
+/** Opens an invite link for `email` and sets the password. Leaves the page on V0 (new account) or Inicio. */
+export async function acceptInvite(page: Page, email: string, password = E2E_PASSWORD): Promise<void> {
+  await page.goto(await mintInvite(page.request, email))
+  await expect(page.getByText(email)).toBeVisible()
+  await page.getByLabel('Contraseña', { exact: true }).fill(password)
+  await page.getByLabel('Repite la contraseña').fill(password)
+  await page.getByRole('button', { name: /^(Crear cuenta|Guardar contraseña) y entrar$/ }).click()
+}
+
+/** VA: email + password → signed in. Leaves the page on V0 or Inicio. */
+export async function signIn(page: Page, email: string, password = E2E_PASSWORD): Promise<void> {
   await page.goto('/')
   await page.getByLabel('Email').fill(email)
-  await page.getByRole('button', { name: 'Enviar código' }).click()
-  await expect(page.getByText(`Te enviamos un código a ${email}`)).toBeVisible()
-  const code = await readCode(page.request, email)
-  await page.getByLabel('Código de 6 dígitos').fill(code)
+  await page.getByLabel('Contraseña').fill(password)
   await page.getByRole('button', { name: 'Entrar' }).click()
 }
 
@@ -80,10 +66,10 @@ export async function completeOnboarding(page: Page, name = 'E2E'): Promise<void
   await expect(page.getByRole('heading', { name: 'Inicio', level: 1 })).toBeVisible()
 }
 
-/** New account straight to an empty Inicio. */
+/** New account (invite link + password) straight to an empty Inicio. */
 export async function signUp(page: Page, tag: string): Promise<string> {
   const email = uniqueEmail(tag)
-  await signIn(page, email)
+  await acceptInvite(page, email)
   await completeOnboarding(page)
   return email
 }

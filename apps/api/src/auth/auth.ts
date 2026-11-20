@@ -1,21 +1,25 @@
 import { betterAuth } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import { APIError, createAuthMiddleware } from 'better-auth/api'
-import { emailOTP } from 'better-auth/plugins/email-otp'
-import { sql } from 'drizzle-orm'
-import { randomUUID } from 'node:crypto'
 import { createDb, type Db } from '../db/client.js'
 import { account, rateLimit, session, user, verification } from '../db/schema.js'
-import { createResendMailer, type Mailer } from './mailer.js'
+import { consumeRateLimit, IP_HEADERS, ipFromHeaders, UNKNOWN_IP } from './rate-limit.js'
 
-const SEND_OTP_PATH = '/email-otp/send-verification-otp'
-const SEND_WINDOW_SEC = 15 * 60
-const SENDS_PER_EMAIL = 3
-const SENDS_PER_IP = 10
+export const SIGN_IN_PATH = '/sign-in/email'
+/** Longest rate-limit window; Better Auth prunes `rate_limit` rows older than this. */
+export const RATE_WINDOW_SEC = 15 * 60
+/** Attempts per email from one IP, and per email from all IPs, per RATE_WINDOW_SEC. */
+const SIGN_INS_PER_EMAIL_AND_IP = 5
+const SIGN_INS_PER_EMAIL = 30
+export const MIN_PASSWORD_LENGTH = 8
+
+/** The `rate_limit` keys of the sign-in limits for `email` (lowercased) from `ip`. */
+export function signInLimitKeys(email: string, ip: string) {
+  return { perEmailAndIp: `sign-in:${ip}:${email}`, perEmail: `sign-in:${email}` }
+}
 
 export interface AuthDeps {
   db: Db
-  mailer: Mailer
   /** Defaults to `BETTER_AUTH_SECRET`. */
   secret?: string
   /** Defaults to `BETTER_AUTH_URL`. */
@@ -23,20 +27,11 @@ export interface AuthDeps {
 }
 
 /**
- * Better Auth with email codes (U3, KTD3). Built from a factory so tests run it on PGlite
- * with a capturing mailer.
+ * Better Auth with email + password and no self sign-up. Accounts are only created, and
+ * passwords only reset, by redeeming an invite link (`src/invites`). Built from a factory so
+ * tests run it on PGlite.
  */
-/**
- * Production deployment, where sign-in codes are hashed at rest. Vercel sets NODE_ENV to
- * `production` in preview deployments too, so there `VERCEL_ENV` decides.
- */
-function isProductionDeployment(): boolean {
-  const vercelEnv = process.env.VERCEL_ENV
-  return vercelEnv ? vercelEnv === 'production' : process.env.NODE_ENV === 'production'
-}
-
-export function createAuth({ db, mailer, secret, baseURL }: AuthDeps) {
-  const production = isProductionDeployment()
+export function createAuth({ db, secret, baseURL }: AuthDeps) {
   return betterAuth({
     secret: secret ?? process.env.BETTER_AUTH_SECRET,
     baseURL: baseURL ?? process.env.BETTER_AUTH_URL,
@@ -44,7 +39,19 @@ export function createAuth({ db, mailer, secret, baseURL }: AuthDeps) {
       provider: 'pg',
       schema: { user, session, account, verification, rateLimit },
     }),
+    emailAndPassword: {
+      enabled: true,
+      // Invite-only: `/sign-up/email` answers 400 EMAIL_PASSWORD_SIGN_UP_DISABLED.
+      disableSignUp: true,
+      minPasswordLength: MIN_PASSWORD_LENGTH,
+      maxPasswordLength: 128,
+    },
+    advanced: {
+      // Per-client buckets instead of one shared bucket per path (see IP_HEADERS).
+      ipAddress: { ipAddressHeaders: [...IP_HEADERS] },
+    },
     session: {
+      // 60 days, renewed once a day of use (KTD3).
       expiresIn: 60 * 24 * 60 * 60,
       updateAge: 24 * 60 * 60,
     },
@@ -53,78 +60,40 @@ export function createAuth({ db, mailer, secret, baseURL }: AuthDeps) {
       // Shared by every serverless instance, unlike the in-memory default (KTD3).
       storage: 'database',
       customRules: {
-        // Per IP. The per-email limit is the `hooks.before` below.
-        [SEND_OTP_PATH]: { window: SEND_WINDOW_SEC, max: SENDS_PER_IP },
-        // Room for the 5 attempts a code allows; the default is 3 per minute.
-        '/sign-in/email-otp': { window: 60, max: 10 },
+        // Per IP. The per email+IP and per email limits are the `hooks.before` below.
+        [SIGN_IN_PATH]: { window: 60, max: 10 },
+        // Keeps RATE_WINDOW_SEC the longest window, so the custom keys below are not pruned early.
+        '/sign-up/email': { window: RATE_WINDOW_SEC, max: 10 },
       },
     },
     hooks: {
       before: createAuthMiddleware(async (ctx) => {
-        if (ctx.path !== SEND_OTP_PATH) return
-        const email = typeof ctx.body?.email === 'string' ? ctx.body.email.toLowerCase() : ''
+        if (ctx.path !== SIGN_IN_PATH) return
+        const email = typeof ctx.body?.email === 'string' ? ctx.body.email.trim().toLowerCase() : ''
         if (!email) return
-        const retryAfter = await consumeEmailSend(db, email)
+        const ip = ipFromHeaders(ctx.request?.headers ?? ctx.headers) ?? UNKNOWN_IP
+        const keys = signInLimitKeys(email, ip)
+        const retryAfter =
+          (await consumeRateLimit(db, keys.perEmailAndIp, RATE_WINDOW_SEC, SIGN_INS_PER_EMAIL_AND_IP)) ??
+          (await consumeRateLimit(db, keys.perEmail, RATE_WINDOW_SEC, SIGN_INS_PER_EMAIL))
         if (retryAfter !== null) {
           throw new APIError(
             'TOO_MANY_REQUESTS',
-            { message: 'Too many codes requested for this email.', code: 'TOO_MANY_CODE_REQUESTS' },
+            { message: 'Too many sign-in attempts for this email.', code: 'TOO_MANY_SIGN_IN_ATTEMPTS' },
             { 'X-Retry-After': String(retryAfter) },
           )
         }
       }),
     },
-    plugins: [
-      emailOTP({
-        otpLength: 6,
-        expiresIn: 600,
-        allowedAttempts: 5,
-        // Plain only outside production (previews included), so end-to-end tests can read codes (U18).
-        storeOTP: production ? 'hashed' : 'plain',
-        async sendVerificationOTP({ email, otp }) {
-          await mailer.sendOtp({ email, otp })
-        },
-      }),
-    ],
   })
 }
 
 export type Auth = ReturnType<typeof createAuth>
 
-/**
- * Counts one code request for `email` in a fixed 15-minute window, atomically in the
- * `rate_limit` table so every instance sees it. Returns the seconds to wait when over the
- * limit, otherwise null. `last_request` holds the window start for these keys; Better Auth
- * prunes rows older than its longest configured window (also 15 minutes).
- */
-async function consumeEmailSend(db: Db, email: string): Promise<number | null> {
-  const now = Date.now()
-  const windowMs = SEND_WINDOW_SEC * 1000
-  const expired = sql`${rateLimit.lastRequest} <= ${now - windowMs}`
-  const [row] = await db
-    .insert(rateLimit)
-    .values({ id: randomUUID(), key: `email-otp-send:${email}`, count: 1, lastRequest: now })
-    .onConflictDoUpdate({
-      target: rateLimit.key,
-      set: {
-        count: sql`case when ${expired} then 1 else ${rateLimit.count} + 1 end`,
-        lastRequest: sql`case when ${expired} then ${now} else ${rateLimit.lastRequest} end`,
-      },
-    })
-    .returning({ count: rateLimit.count, windowStart: rateLimit.lastRequest })
-  if (!row || row.count <= SENDS_PER_EMAIL) return null
-  return Math.max(1, Math.ceil((row.windowStart + windowMs - now) / 1000))
-}
-
 let defaultAuth: Auth | undefined
 
 /** The production instance, built on first use from the environment. */
 export function getDefaultAuth(db?: Db): Auth {
-  if (!defaultAuth) {
-    const apiKey = process.env.RESEND_API_KEY
-    const from = process.env.EMAIL_FROM
-    if (!apiKey || !from) throw new Error('RESEND_API_KEY and EMAIL_FROM must be set')
-    defaultAuth = createAuth({ db: db ?? createDb().db, mailer: createResendMailer({ apiKey, from }) })
-  }
+  defaultAuth ??= createAuth({ db: db ?? createDb().db })
   return defaultAuth
 }

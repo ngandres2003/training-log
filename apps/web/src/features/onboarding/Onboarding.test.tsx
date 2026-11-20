@@ -14,8 +14,9 @@ import type { AuthApi } from '../auth/auth-client'
 const ANA = { id: '0190f0c0-0000-7000-8000-00000000000a', email: 'ana@example.com' }
 
 const noAuth: AuthApi = {
-  sendCode: async () => ({ ok: false, reason: 'offline' }),
-  verifyCode: async () => ({ ok: false, reason: 'offline' }),
+  signIn: async () => ({ ok: false, reason: 'offline' }),
+  checkInvite: async () => ({ ok: false, reason: 'offline' }),
+  redeemInvite: async () => ({ ok: false, reason: 'offline' }),
 }
 
 function deps() {

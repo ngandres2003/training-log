@@ -1,25 +1,32 @@
-import { emailOTPClient } from 'better-auth/client/plugins'
 import { createAuthClient } from 'better-auth/react'
 import type { LastKnownUser } from '../../data/db'
 import { getLastKnownUser, setLastKnownUser } from '../../data/syncMeta'
 
 /** Better Auth client. No baseURL: it resolves to `/api/auth` on the page's own origin (KTD1). */
-export const authClient = createAuthClient({ plugins: [emailOTPClient()] })
+export const authClient = createAuthClient()
 
-export type SendResult =
-  | { ok: true }
-  | { ok: false; reason: 'rate-limited'; retryAfterSec: number }
-  | { ok: false; reason: 'offline' | 'error' }
+/** Same rule as the server. */
+export const MIN_PASSWORD_LENGTH = 8
 
-export type VerifyResult =
+type Failure<R extends string> = { ok: false; reason: R } | { ok: false; reason: 'rate-limited'; retryAfterSec: number }
+
+export type SignInResult = { ok: true; user: LastKnownUser } | Failure<'invalid' | 'offline' | 'error'>
+
+export type InviteStatus = 'pending' | 'used' | 'expired' | 'revoked'
+
+export type InviteCheck =
+  | { ok: true; email: string; status: InviteStatus; hasAccount: boolean }
+  | Failure<'invalid' | 'offline' | 'error'>
+
+export type RedeemResult =
   | { ok: true; user: LastKnownUser }
-  | { ok: false; reason: 'rate-limited'; retryAfterSec: number }
-  | { ok: false; reason: 'invalid' | 'expired' | 'too-many-attempts' | 'offline' | 'error' }
+  | Failure<'invalid' | 'used' | 'expired' | 'revoked' | 'weak-password' | 'offline' | 'error'>
 
-/** What VA needs from the server; injectable so screens are tested without a network. */
+/** What VA and the invitation page need from the server; injectable so screens are tested without a network. */
 export interface AuthApi {
-  sendCode(email: string): Promise<SendResult>
-  verifyCode(email: string, code: string): Promise<VerifyResult>
+  signIn(email: string, password: string): Promise<SignInResult>
+  checkInvite(token: string): Promise<InviteCheck>
+  redeemInvite(token: string, password: string): Promise<RedeemResult>
 }
 
 interface ClientError {
@@ -36,40 +43,63 @@ function failure(): { ok: false; reason: 'offline' | 'error' } {
   return { ok: false, reason: typeof navigator !== 'undefined' && !navigator.onLine ? 'offline' : 'error' }
 }
 
+async function postJson(path: string, body: unknown): Promise<Response> {
+  return fetch(path, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+}
+
+const REDEEM_ERRORS: Record<string, 'invalid' | 'used' | 'expired' | 'revoked' | 'weak-password'> = {
+  invite_invalid: 'invalid',
+  invite_used: 'used',
+  invite_expired: 'expired',
+  invite_revoked: 'revoked',
+  invalid_password: 'weak-password',
+}
+
 export const authApi: AuthApi = {
-  async sendCode(email) {
+  async signIn(email, password) {
     let response: Response | undefined
     try {
-      const { error } = await authClient.emailOtp.sendVerificationOtp({
+      const { data, error } = await authClient.signIn.email({
         email,
-        type: 'sign-in',
+        password,
         fetchOptions: { onError: (ctx: { response: Response }) => void (response = ctx.response) },
       })
-      if (!error) return { ok: true }
-      if ((error as ClientError).status === 429) {
-        return { ok: false, reason: 'rate-limited', retryAfterSec: retryAfterOf(response) }
-      }
+      if (data) return { ok: true, user: { id: data.user.id, email: data.user.email } }
+      const { status } = (error ?? {}) as ClientError
+      if (status === 429) return { ok: false, reason: 'rate-limited', retryAfterSec: retryAfterOf(response) }
+      if (status === 401) return { ok: false, reason: 'invalid' }
       return failure()
     } catch {
       return failure()
     }
   },
 
-  async verifyCode(email, code) {
-    let response: Response | undefined
+  async checkInvite(token) {
     try {
-      const { data, error } = await authClient.signIn.emailOtp({
-        email,
-        otp: code,
-        fetchOptions: { onError: (ctx: { response: Response }) => void (response = ctx.response) },
-      })
-      if (data) return { ok: true, user: { id: data.user.id, email: data.user.email } }
-      const { status, code: errorCode } = (error ?? {}) as ClientError
-      if (status === 429) return { ok: false, reason: 'rate-limited', retryAfterSec: retryAfterOf(response) }
-      if (errorCode === 'INVALID_OTP') return { ok: false, reason: 'invalid' }
-      if (errorCode === 'OTP_EXPIRED') return { ok: false, reason: 'expired' }
-      if (errorCode === 'TOO_MANY_ATTEMPTS') return { ok: false, reason: 'too-many-attempts' }
+      const res = await postJson('/api/invites/check', { token })
+      if (res.status === 429) return { ok: false, reason: 'rate-limited', retryAfterSec: retryAfterOf(res) }
+      if (res.status === 404) return { ok: false, reason: 'invalid' }
+      if (!res.ok) return failure()
+      const body = (await res.json()) as { email: string; status: InviteStatus; hasAccount: boolean }
+      return { ok: true, ...body }
+    } catch {
       return failure()
+    }
+  },
+
+  async redeemInvite(token, password) {
+    try {
+      const res = await postJson('/api/invites/redeem', { token, password })
+      if (res.status === 429) return { ok: false, reason: 'rate-limited', retryAfterSec: retryAfterOf(res) }
+      const body = (await res.json().catch(() => ({}))) as { error?: string; user?: LastKnownUser }
+      if (res.ok && body.user) return { ok: true, user: { id: body.user.id, email: body.user.email } }
+      const reason = body.error ? REDEEM_ERRORS[body.error] : undefined
+      return reason ? { ok: false, reason } : failure()
     } catch {
       return failure()
     }
