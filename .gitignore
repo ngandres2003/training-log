@@ -1,10 +1,44 @@
+# Dependencias
 node_modules
+.pnpm-store
+
+# Builds y cachés
 dist
+dev-dist
+*.tsbuildinfo
+.vite
+.eslintcache
+
+# Vercel
 .vercel
+
+# Variables de entorno y secretos (solo se versiona el ejemplo)
 .env
 .env.*
 !.env.example
+*.pem
+*.key
+
+# Tests
 coverage
 playwright-report
+blob-report
 test-results
+playwright/.cache
+
+# Logs
 *.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Sistema operativo y editores
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea
+.vscode/*
+!.vscode/extensions.json
+*.swp
+
+# Claude Code: ajustes locales de cada persona
+.claude/settings.local.json
