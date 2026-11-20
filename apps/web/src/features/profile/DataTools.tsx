@@ -3,6 +3,7 @@ import { useSyncSnapshot } from '../../app/SyncIndicator'
 import { listCustomExercises } from '../../data/repositories/exercises'
 import { Button } from '../../ui/Button'
 import { loadCatalog } from '../exercises/catalog'
+import { seedDemoData } from './demo-seed'
 import { buildCsvExport, buildJsonExport, downloadFile } from './export'
 import { importExport, InvalidExportError, parseExport } from './import'
 import { Section } from './Section'
@@ -10,6 +11,9 @@ import { Section } from './Section'
 const CONFIRM_WORD = 'BORRAR'
 
 const today = () => new Date().toISOString().slice(0, 10)
+
+/** "Cargar datos de ejemplo" exists in dev builds, or in a build made with VITE_DEMO_SEED=true (a preview). */
+const DEMO_SEED_ENABLED = import.meta.env.DEV || import.meta.env.VITE_DEMO_SEED === 'true'
 
 /** V12 Datos: JSON export/import, CSV export and "Borrar todos mis datos" (R8, U15 steps 3–4). */
 export function DataTools({ onDeleteAll }: { onDeleteAll: () => Promise<void> }) {
@@ -63,6 +67,12 @@ export function DataTools({ onDeleteAll }: { onDeleteAll: () => Promise<void> })
       return `Importados ${result.rows} registros.`
     }, 'No se pudo importar el archivo.')
 
+  const loadDemo = () =>
+    run(async () => {
+      const r = await seedDemoData()
+      return `Añadidos ${r.workouts} entrenos de ejemplo (${r.sets} series) en 3 rutinas.`
+    }, 'No se pudieron cargar los datos de ejemplo.')
+
   const deleteAll = () =>
     run(async () => {
       await onDeleteAll()
@@ -94,6 +104,11 @@ export function DataTools({ onDeleteAll }: { onDeleteAll: () => Promise<void> })
             if (file) void importFile(file)
           }}
         />
+        {DEMO_SEED_ENABLED && (
+          <Button variant="secondary" disabled={busy} onClick={() => void loadDemo()}>
+            Cargar 4 meses de ejemplo
+          </Button>
+        )}
       </div>
 
       {!confirming ? (
