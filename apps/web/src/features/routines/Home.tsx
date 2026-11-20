@@ -24,6 +24,7 @@ import { DEFAULT_SETTINGS, getSettings } from '../../data/repositories/settings'
 import { getActiveWorkout, listWorkouts } from '../../data/repositories/workouts'
 import { Button } from '../../ui/Button'
 import { useExerciseLookup } from '../exercises/catalog'
+import { TipCard } from '../tips/TipCard'
 import { ConfirmSheet, Sheet } from './components/Sheet'
 import { FolderSection } from './FolderSection'
 import { dayOf, todayKey, workoutMinutes } from './format'
@@ -64,6 +65,7 @@ export function Home() {
   const { byId } = useExerciseLookup()
   const [moving, setMoving] = useState<Routine | null>(null)
   const [deleting, setDeleting] = useState<Routine | null>(null)
+  const [confirmingEmpty, setConfirmingEmpty] = useState(false)
   const [message, setMessage] = useState('')
 
   if (!data) return <PageHeader title="Inicio" />
@@ -145,7 +147,7 @@ export function Home() {
           <button
             type="button"
             onClick={() => void onStartRoutine(active.routineId)}
-            className="flex min-h-12 items-center gap-3 rounded-xl bg-sol px-4 py-3 text-left font-bold text-hierro"
+            className="flex min-h-12 items-center gap-3 rounded-xl bg-sol px-4 py-3 text-left font-bold text-tinta"
           >
             <Play aria-hidden="true" className="size-5 fill-current" />
             <span className="flex-1">Continuar entreno · {active.name}</span>
@@ -153,16 +155,18 @@ export function Home() {
         )}
 
         <div className="flex gap-2">
-          <Button variant="secondary" className="flex-1" onClick={() => void onStartRoutine(null)}>
+          <Button variant="secondary" className="flex-1" onClick={() => setConfirmingEmpty(true)}>
             Empezar entreno vacío
           </Button>
           <Link
             to="rutinas/nueva"
-            className="inline-flex min-h-12 flex-1 items-center justify-center rounded-lg bg-sol px-4 font-bold text-hierro"
+            className="inline-flex min-h-12 flex-1 items-center justify-center rounded-lg bg-sol px-4 font-bold text-tinta"
           >
             Nueva rutina
           </Link>
         </div>
+
+        <TipCard />
 
         {suggestion && <TodaySuggestion routine={suggestion} onStart={() => void onStartRoutine(suggestion.id)} />}
 
@@ -220,6 +224,20 @@ export function Home() {
             </Button>
           </div>
         </Sheet>
+      )}
+
+      {confirmingEmpty && (
+        <ConfirmSheet
+          tone="primary"
+          title="¿Empezar entreno vacío?"
+          description="Empiezas sin rutina y añades los ejercicios sobre la marcha."
+          confirmLabel="Empezar"
+          onCancel={() => setConfirmingEmpty(false)}
+          onConfirm={() => {
+            setConfirmingEmpty(false)
+            void onStartRoutine(null)
+          }}
+        />
       )}
 
       {deleting && (

@@ -45,12 +45,15 @@ export function ConfirmSheet({
   confirmLabel,
   onConfirm,
   onCancel,
+  tone = 'danger',
 }: {
   title: string
   description: string
   confirmLabel: string
   onConfirm: () => void
   onCancel: () => void
+  /** `danger` for destructive actions (red); `primary` for a plain confirmation. */
+  tone?: 'danger' | 'primary'
 }) {
   return (
     <Sheet title={title} description={description} alert>
@@ -58,7 +61,7 @@ export function ConfirmSheet({
         <Button variant="secondary" className="flex-1" onClick={onCancel} autoFocus>
           Cancelar
         </Button>
-        <Button className="flex-1 !bg-[#e05d5d] !text-arena" onClick={onConfirm}>
+        <Button className={tone === 'danger' ? 'flex-1 !bg-[#e05d5d] !text-arena' : 'flex-1'} onClick={onConfirm}>
           {confirmLabel}
         </Button>
       </div>
