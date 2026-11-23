@@ -42,14 +42,12 @@ export function ExerciseBrowser(props: ExerciseBrowserProps) {
   const [limit, setLimit] = useState({ key: filterKey, count: PAGE })
   if (limit.key !== filterKey) setLimit({ key: filterKey, count: PAGE })
   const sentinel = useRef<HTMLLIElement>(null)
-  const hasMore = limit.count < results.length
+  // Without IntersectionObserver nothing could load more, so the whole list renders at once.
+  const canObserve = typeof IntersectionObserver !== 'undefined'
+  const hasMore = canObserve && limit.count < results.length
   useEffect(() => {
     const el = sentinel.current
     if (!el || !hasMore) return
-    if (typeof IntersectionObserver === 'undefined') {
-      setLimit((l) => ({ ...l, count: Number.POSITIVE_INFINITY }))
-      return
-    }
     const io = new IntersectionObserver(
       (entries) => {
         if (entries.some((e) => e.isIntersecting)) setLimit((l) => ({ ...l, count: l.count + PAGE }))
