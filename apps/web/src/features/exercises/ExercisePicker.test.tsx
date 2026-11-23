@@ -1,6 +1,6 @@
 import 'fake-indexeddb/auto'
 import '@testing-library/jest-dom/vitest'
-import { act, cleanup, render, screen, within } from '@testing-library/react'
+import { act, cleanup, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -54,10 +54,11 @@ describe('ExercisePicker (V4, selection mode)', () => {
     )
     renderPicker()
     await screen.findByText('Ejercicio 000')
+    await waitFor(() => expect(reveal).toBeDefined())
     expect(screen.getAllByTestId('exercise-name')).toHaveLength(40)
 
     await act(async () => reveal?.())
-    expect(screen.getAllByTestId('exercise-name')).toHaveLength(80)
+    await waitFor(() => expect(screen.getAllByTestId('exercise-name')).toHaveLength(80))
     // The live region still counts every result.
     expect(screen.getByText('100 ejercicios')).toBeInTheDocument()
   })

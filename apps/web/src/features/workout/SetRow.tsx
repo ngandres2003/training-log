@@ -202,7 +202,7 @@ export function SetRow(props: SetRowProps) {
             </ActionMenu>
           </div>
         </td>
-        <td className="max-w-20 truncate px-1 text-sm text-polvo">
+        <td className="max-w-14 truncate px-0.5 text-xs text-polvo">
           <div className="flex flex-col">
             <span>{model.previous ? compactSet(model.previous, trackingType, unit) : '—'}</span>
             {model.pr && (

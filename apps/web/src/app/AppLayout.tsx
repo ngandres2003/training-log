@@ -44,7 +44,7 @@ export function AppLayout() {
         </section>
       )}
 
-      <main className="flex flex-1 flex-col px-4 pb-4">
+      <main className="flex flex-1 flex-col px-4 pb-[calc(1rem+var(--mini-player-space,0px))]">
         <Outlet />
       </main>
 

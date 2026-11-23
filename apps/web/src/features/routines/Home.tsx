@@ -34,6 +34,7 @@ import { onStartRoutine } from './start-workout'
 import { TodaySuggestion } from './TodaySuggestion'
 import { WeekRing } from './WeekRing'
 import { WeekStrip } from './WeekStrip'
+import { useWorkoutUi } from '../workout/ui-store'
 
 /** Navigation state set by the editor after saving a new routine (spec F1 step 5). */
 export interface HomeLocationState {
@@ -67,6 +68,7 @@ export function Home() {
   const [deleting, setDeleting] = useState<Routine | null>(null)
   const [confirmingEmpty, setConfirmingEmpty] = useState(false)
   const [message, setMessage] = useState('')
+  const workoutUi = useWorkoutUi()
 
   if (!data) return <PageHeader title="Inicio" />
 
@@ -143,7 +145,8 @@ export function Home() {
           <WeekStrip weekStart={weekStart} today={today} trained={trainedThisWeek} />
         </section>
 
-        {active && (
+        {/* Before the workout is opened in this session the recovery banner already offers it. */}
+        {active && workoutUi.touched && (
           <button
             type="button"
             onClick={() => void onStartRoutine(active.routineId)}
@@ -156,7 +159,7 @@ export function Home() {
 
         <div className="flex gap-2">
           <Button variant="secondary" className="flex-1" onClick={() => setConfirmingEmpty(true)}>
-            Empezar entreno vacío
+            Entreno libre
           </Button>
           <Link
             to="rutinas/nueva"
@@ -168,7 +171,7 @@ export function Home() {
 
         <TipCard />
 
-        {suggestion && <TodaySuggestion routine={suggestion} onStart={() => void onStartRoutine(suggestion.id)} />}
+        {suggestion && !active && <TodaySuggestion routine={suggestion} onStart={() => void onStartRoutine(suggestion.id)} />}
 
         <section aria-labelledby="mis-rutinas" className="flex flex-col gap-4">
           <h2 id="mis-rutinas" className="font-display text-2xl uppercase">

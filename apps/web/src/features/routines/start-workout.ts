@@ -4,7 +4,7 @@ import { startOrResumeWorkout } from '../workout/workout-actions'
 
 /**
  * Every start in the Inicio tab goes through here — "▶ Iniciar" on a card, V2 or "Toca hoy"
- * (routine id), "Empezar entreno vacío" (null) and the "Continuar entreno" banner (the active
+ * (routine id), "Entreno libre" (null) and the "Continuar entreno" banner (the active
  * workout's routine id).
  *
  * There is only ever one `status: active` workout: if one is in progress it is resumed (never a
