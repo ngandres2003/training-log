@@ -81,12 +81,40 @@ self.addEventListener('message', (event) => {
   }
 })
 
+// Server Web Push (apps/api/src/push). Always shows a notification: a push that shows none
+// gets a generic browser notice, and Safari revokes the subscription after a few of them.
+self.addEventListener('push', (event) => {
+  let data: { title?: unknown; body?: unknown } = {}
+  try {
+    data = (event.data?.json() ?? {}) as typeof data
+  } catch {
+    // Not JSON: fall back to the default text.
+  }
+  const title = typeof data.title === 'string' ? data.title : 'Descanso terminado'
+  const body = typeof data.body === 'string' ? data.body : ''
+  // A worker-timer alert for the same rest would be redundant now.
+  cancelPendingRest?.()
+  cancelPendingRest = null
+  event.waitUntil(
+    self.registration.showNotification(title, {
+      body,
+      tag: 'rest-end',
+      renotify: true,
+      icon: '/pwa-192x192.png',
+      badge: '/pwa-192x192.png',
+    } as NotificationOptions),
+  )
+})
+
 self.addEventListener('notificationclick', (event) => {
   event.notification.close()
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windows) => {
+      // Rest-end alerts take the user back to the workout, not just to the app.
       const existing = windows[0]
-      return existing ? existing.focus() : self.clients.openWindow('/')
+      if (!existing) return self.clients.openWindow('/?entreno=1')
+      existing.postMessage({ type: 'open-workout' })
+      return existing.focus()
     }),
   )
 })

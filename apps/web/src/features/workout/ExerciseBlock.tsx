@@ -66,7 +66,7 @@ function ExerciseHeader({
         <div className="flex min-w-0 flex-1 flex-col">
           <Link
             to={`/progreso/ejercicios/${we.exerciseId}`}
-            className="line-clamp-2 min-h-6 text-lg leading-tight font-bold break-words"
+            className="-my-2 line-clamp-2 py-2 text-lg leading-tight font-bold break-words"
           >
             {exercise.letter && <span className="mr-1 font-display text-acento">{exercise.letter}</span>}
             {exercise.name}
@@ -95,7 +95,7 @@ function ExerciseHeader({
       )}
 
       {noteOpen && (
-        <Sheet title="Nota de hoy">
+        <Sheet title="Nota de hoy" onClose={() => setNoteOpen(false)}>
           <label className="flex flex-col gap-1 text-sm text-polvo">
             Nota para {exercise.name}
             <textarea
@@ -186,8 +186,10 @@ export const ExerciseBlock = forwardRef<
           <th scope="col" className="w-12 font-medium">
             Serie
           </th>
-          <th scope="col" className="w-20 text-left font-medium">
-            Anterior
+          {/* Narrow, so kg and reps get room for thumbs. */}
+          <th scope="col" className="w-14 text-left font-medium">
+            <span aria-hidden="true">Ant.</span>
+            <span className="sr-only">Anterior</span>
           </th>
           {fields.map((f) => (
             <th key={f.key} scope="col" className={`font-medium ${f.key === 'rpe' ? 'w-12' : ''}`}>
@@ -249,7 +251,7 @@ export const ExerciseBlock = forwardRef<
       className={`flex flex-col gap-3 rounded-2xl border bg-asfalto p-3 transition-[opacity,transform,border-color,box-shadow] duration-300 ease-suave ${
         stacked
           ? 'w-full border-borde-fuerte'
-          : `scrollbar-none max-h-full w-[calc(100%-1.75rem)] shrink-0 snap-center overflow-y-auto ${
+          : `scrollbar-none max-h-full ${count === 1 ? 'w-full' : 'w-[calc(100%-1.75rem)]'} shrink-0 snap-center overflow-y-auto ${
               current
                 ? 'neon'
                 : 'neon-soft scale-[0.96] opacity-50'

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Outlet } from 'react-router'
+import { Outlet, ScrollRestoration, useLocation } from 'react-router'
 import type { LastKnownUser } from '../data/db'
 import { useOnline } from '../features/auth/hooks'
 import { ReauthSheet } from '../features/auth/ReauthSheet'
@@ -20,6 +20,7 @@ export function AppLayout() {
   const { showReauthBanner } = indicatorState(useSyncSnapshot())
   const online = useOnline()
   const activeWorkout = useActiveWorkoutUi()
+  const { pathname } = useLocation()
   const [reauthOpen, setReauthOpen] = useState(false)
   const [otherAccount, setOtherAccount] = useState(false)
 
@@ -44,9 +45,14 @@ export function AppLayout() {
         </section>
       )}
 
-      <main className="flex flex-1 flex-col px-4 pb-4">
-        <Outlet />
+      <main className="flex flex-1 flex-col px-4 pb-[calc(1rem+var(--mini-player-space,0px))]">
+        {/* Each screen rises in briefly, so tab and page changes are not a hard cut. */}
+        <div key={pathname} className="flex flex-1 flex-col animate-rise">
+          <Outlet />
+        </div>
       </main>
+      {/* New screens start at the top; Back returns to where the user was. */}
+      <ScrollRestoration />
 
       <div className="sticky bottom-0 z-30 flex flex-col gap-2">
         <div className="flex flex-col gap-2 px-2 empty:hidden">

@@ -1,6 +1,6 @@
 import type { Workout } from '@training-log/domain'
-import { Dumbbell } from 'lucide-react'
-import { useState } from 'react'
+import { Dumbbell, X } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { remainingRestMs } from '../../pwa/notify'
 import { Button } from '../../ui/Button'
 import { ConfirmSheet } from '../routines/components/Sheet'
@@ -28,6 +28,14 @@ function Player({ workout }: { workout: Workout }) {
   const rest = remainingRestMs(workout.restEndsAt, now)
   const resting = rest > 0
   const elapsed = elapsedClock(now - Date.parse(workout.startedAt))
+  // The pill floats over the end of the page: the page reserves room so it covers nothing.
+  useEffect(() => {
+    const root = document.documentElement
+    root.style.setProperty('--mini-player-space', '4.5rem')
+    return () => {
+      root.style.removeProperty('--mini-player-space')
+    }
+  }, [])
   // A small floating pill over the bottom-right corner: the clock, or the rest countdown while
   // resting. The routine name stays in the accessible name.
   return (
@@ -67,36 +75,43 @@ function RecoveryBanner({ workout }: { workout: Workout }) {
   const [confirmDiscard, setConfirmDiscard] = useState(false)
   const stale = isStale(workout, now)
 
+  // One compact row, so it does not cover the page: name and time, Descartar, Continuar.
   return (
     <section
       aria-labelledby="recovery-title"
-      className="mx-2 flex flex-col gap-2 rounded-xl border border-sol/60 bg-asfalto p-3"
+      className="mx-2 flex flex-col gap-1 rounded-xl border border-sol/60 bg-asfalto py-1.5 pr-1.5 pl-3 animate-rise"
     >
-      <div className="flex items-baseline gap-2">
-        <h2 id="recovery-title" className="min-w-0 flex-1 font-bold">
-          Tienes un entreno en curso
-        </h2>
-        <span className="shrink-0 font-display text-acento">{elapsedClock(now - Date.parse(workout.startedAt))}</span>
-      </div>
-      <p className="truncate text-sm text-polvo">{workout.name}</p>
-      {stale && (
-        <p className="text-sm">
-          Lleva abierto más de 6 horas. Puedes guardarlo con la hora de la última serie como hora de fin.
-        </p>
-      )}
-      <div className="flex gap-2">
-        <Button variant="ghost" className="flex-1" onClick={() => setConfirmDiscard(true)}>
-          Descartar
-        </Button>
+      <div className="flex items-center gap-1">
+        <div className="min-w-0 flex-1">
+          <h2 id="recovery-title" className="truncate text-sm font-bold">
+            Tienes un entreno en curso
+          </h2>
+          <p className="truncate text-xs text-polvo">
+            {workout.name} · <span className="font-display text-acento">{elapsedClock(now - Date.parse(workout.startedAt))}</span>
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setConfirmDiscard(true)}
+          aria-label="Descartar"
+          className="inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center rounded-lg text-polvo active:bg-concreto/60"
+        >
+          <X aria-hidden="true" className="size-5" />
+        </button>
         {stale && (
-          <Button variant="secondary" className="flex-1" onClick={() => void saveStaleWorkout(workout.id)}>
+          <Button variant="secondary" className="shrink-0 px-3" onClick={() => void saveStaleWorkout(workout.id)}>
             Guardar
           </Button>
         )}
-        <Button className="flex-1" onClick={openWorkout}>
+        <Button className="shrink-0 px-4" onClick={openWorkout}>
           Continuar
         </Button>
       </div>
+      {stale && (
+        <p className="pb-1 text-xs text-polvo">
+          Lleva abierto más de 6 horas. «Guardar» lo cierra a la hora de la última serie.
+        </p>
+      )}
       {confirmDiscard && (
         <ConfirmSheet
           title="¿Descartar entreno?"

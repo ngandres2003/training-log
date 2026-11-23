@@ -1,22 +1,34 @@
 import { useId, type ReactNode } from 'react'
 import { Button } from '../../../ui/Button'
+import { useLayer } from '../../../ui/layer'
 
-/** Bottom sheet dialog over the page. `alert` is for confirmations of destructive actions. */
+/**
+ * Bottom sheet dialog over the page. `alert` is for confirmations of destructive actions.
+ * `onClose` runs on Back and on a tap on the backdrop, like Cancelar.
+ */
 export function Sheet({
   title,
   description,
   alert = false,
+  onClose,
   children,
 }: {
   title: string
   description?: string
   alert?: boolean
+  onClose: () => void
   children: ReactNode
 }) {
+  useLayer(onClose)
   const titleId = useId()
   const textId = useId()
   return (
-    <div className="fixed inset-0 z-[60] flex items-end justify-center bg-hierro/80 animate-fade-in">
+    <div
+      className="fixed inset-0 z-[60] flex items-end justify-center bg-hierro/80 animate-fade-in"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose()
+      }}
+    >
       <section
         role={alert ? 'alertdialog' : 'dialog'}
         aria-modal="true"
@@ -56,7 +68,7 @@ export function ConfirmSheet({
   tone?: 'danger' | 'primary'
 }) {
   return (
-    <Sheet title={title} description={description} alert>
+    <Sheet title={title} description={description} alert onClose={onCancel}>
       <div className="flex gap-2">
         <Button variant="secondary" className="flex-1" onClick={onCancel} autoFocus>
           Cancelar

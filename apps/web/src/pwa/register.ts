@@ -29,7 +29,18 @@ export function registerServiceWorker(): void {
   workbox = new Workbox('/sw.js', { scope: '/' })
   workbox.addEventListener('waiting', () => setUpdateAvailable(true))
   void workbox.register()
+
+  // An installed app can stay open for days: look for a new version when it comes back to the
+  // foreground, and hourly while it stays there. The toast still waits for the user.
+  const wb = workbox
+  const check = () => void wb.update().catch(() => undefined)
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') check()
+  })
+  setInterval(check, UPDATE_CHECK_MS)
 }
+
+const UPDATE_CHECK_MS = 60 * 60 * 1000
 
 /** Called from the toast's "Actualizar" button: activates the new worker, then reloads. */
 export function applyUpdate(): void {

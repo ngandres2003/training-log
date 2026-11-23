@@ -2,6 +2,7 @@ import { ChevronRight, Ellipsis } from 'lucide-react'
 import { useEffect, useId, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router'
 import { MORE_MODULES } from './modules'
+import { useLayer } from '../../ui/layer'
 
 /**
  * "Más" tab: a dropdown that opens above the tab bar with one entry per module (./modules) and
@@ -14,6 +15,7 @@ export function MoreMenu({ tabClassName }: { tabClassName: (active: boolean) => 
   const menuRef = useRef<HTMLDivElement>(null)
   const navigate = useNavigate()
   const { pathname } = useLocation()
+  useLayer(() => setOpen(false), open)
   const inside = MORE_MODULES.some((m) => pathname === m.to || pathname.startsWith(`${m.to}/`))
 
   useEffect(() => {

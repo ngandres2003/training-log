@@ -1,12 +1,13 @@
 import 'fake-indexeddb/auto'
 import '@testing-library/jest-dom/vitest'
-import { cleanup, render, screen, within } from '@testing-library/react'
+import { act, cleanup, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { resetDb } from '../../data/testUtils'
 import { ExercisePicker } from './ExercisePicker'
-import { stubCatalog } from './test-fixtures'
+import { resetCatalogCache } from './catalog'
+import { CATALOG_FIXTURE, stubCatalog } from './test-fixtures'
 
 function renderPicker(props: Partial<Parameters<typeof ExercisePicker>[0]> = {}) {
   const onConfirm = vi.fn()
@@ -32,6 +33,36 @@ afterEach(() => {
 })
 
 describe('ExercisePicker (V4, selection mode)', () => {
+  it('renders a long catalog in steps as the end of the list comes near', async () => {
+    const big = Array.from({ length: 100 }, (_, i) => ({
+      ...CATALOG_FIXTURE[0]!,
+      id: `cat-big-${i}`,
+      name: `Ejercicio ${String(i).padStart(3, '0')}`,
+    }))
+    resetCatalogCache()
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify(big), { status: 200 })))
+    let reveal: (() => void) | undefined
+    vi.stubGlobal(
+      'IntersectionObserver',
+      class {
+        constructor(cb: IntersectionObserverCallback) {
+          reveal = () => cb([{ isIntersecting: true } as IntersectionObserverEntry], this as never)
+        }
+        observe() {}
+        disconnect() {}
+      },
+    )
+    renderPicker()
+    await screen.findByText('Ejercicio 000')
+    await waitFor(() => expect(reveal).toBeDefined())
+    expect(screen.getAllByTestId('exercise-name')).toHaveLength(40)
+
+    await act(async () => reveal?.())
+    await waitFor(() => expect(screen.getAllByTestId('exercise-name')).toHaveLength(80))
+    // The live region still counts every result.
+    expect(screen.getByText('100 ejercicios')).toBeInTheDocument()
+  })
+
   it('matches "press banca" against "Press de banca" and "press banca inclinado", ignoring case and accents', async () => {
     const user = userEvent.setup()
     renderPicker()

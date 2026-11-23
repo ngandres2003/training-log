@@ -1,6 +1,7 @@
 import { ChevronLeft } from 'lucide-react'
 import { SyncIndicator } from '../../app/SyncIndicator'
 import { Button } from '../../ui/Button'
+import { useLayer } from '../../ui/layer'
 import { compactSet, fullSet, restClock } from './format'
 import { alternation, type WorkoutModel } from './view-model'
 
@@ -30,6 +31,7 @@ export function RestSheet({
   onFinish: () => void
   onAddExercise: () => void
 }) {
+  useLayer(onBack)
   const unit = model.settings.unit
   const last = model.lastCompleted
   const restEndsAt = model.workout.restEndsAt

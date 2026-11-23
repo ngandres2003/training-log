@@ -12,6 +12,7 @@ import { saveFinishedWorkout } from './session-actions'
 import { routineChanges, summarize } from './session-data'
 import { SessionSummary } from './SessionSummary'
 import { useSession } from './use-session'
+import { useLayer } from '../../ui/layer'
 
 /**
  * V7 · Finalizar entreno (F3): summary and comparison with the last session of the routine,
@@ -20,6 +21,7 @@ import { useSession } from './use-session'
  */
 export function FinishWorkout({ workoutId }: { workoutId: Id }) {
   const { data, model, lookup } = useSession(workoutId)
+  useLayer(closeFinish)
   const now = useNow()
   const nameId = useId()
   const [sensations, setSensations] = useState<SensationValues>({ energy: null, tags: [], note: '' })
@@ -119,7 +121,12 @@ export function FinishWorkout({ workoutId }: { workoutId: Id }) {
       </div>
 
       {confirmDiscard && (
-        <Sheet title="¿Descartar entreno?" description="Se perderán las series de esta sesión." alert>
+        <Sheet
+          title="¿Descartar entreno?"
+          description="Se perderán las series de esta sesión."
+          alert
+          onClose={() => setConfirmDiscard(false)}
+        >
           <div className="flex gap-2">
             <Button variant="secondary" className="flex-1" autoFocus onClick={() => setConfirmDiscard(false)}>
               Cancelar

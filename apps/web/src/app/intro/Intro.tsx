@@ -56,6 +56,27 @@ const CRACKS = [
   'M43 57 L46 71 L40 83',
 ]
 
+const SEEN_KEY = 'tl-intro-at'
+const DAY_MS = 24 * 60 * 60 * 1000
+
+/**
+ * The intro plays on the first open and then at most once a day: an installed app already gets
+ * the system splash, and a 2 s wall on every open gets old. Never with reduced motion.
+ * Records the play, so call it once per page load.
+ */
+export function shouldPlayIntro(now = Date.now()): boolean {
+  if (prefersReducedMotion()) return false
+  try {
+    const last = Number(localStorage.getItem(SEEN_KEY))
+    // A last time in the future (clock moved back) does not count.
+    if (last && now - last >= 0 && now - last < DAY_MS) return false
+    localStorage.setItem(SEEN_KEY, String(now))
+  } catch {
+    // No storage (private mode): play it, as before.
+  }
+  return true
+}
+
 function prefersReducedMotion() {
   try {
     return window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -82,7 +103,7 @@ function Dumbbell() {
 
 /**
  * Opening intro over the app while it loads underneath: the dumbbell slams the screen, it cracks
- * and shatters. Once per page load; a tap skips it. Decorative, so hidden from screen readers.
+ * and shatters. Shown when `shouldPlayIntro()` says so; a tap skips it. Decorative, so hidden from screen readers.
  */
 export function Intro({ onDone }: { onDone?: () => void }) {
   const [visible, setVisible] = useState(true)

@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom/vitest'
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { Intro, INTRO_MS } from './Intro'
+import { Intro, INTRO_MS, shouldPlayIntro } from './Intro'
 
 beforeEach(() => vi.useFakeTimers())
 afterEach(() => {
@@ -24,5 +24,13 @@ describe('Intro', () => {
     render(<Intro />)
     fireEvent.click(screen.getByTestId('intro'))
     expect(screen.queryByTestId('intro')).not.toBeInTheDocument()
+  })
+
+  it('plays on the first open, then at most once a day', () => {
+    localStorage.clear()
+    const t0 = Date.parse('2026-11-23T08:00:00Z')
+    expect(shouldPlayIntro(t0)).toBe(true)
+    expect(shouldPlayIntro(t0 + 60_000)).toBe(false)
+    expect(shouldPlayIntro(t0 + 25 * 3_600_000)).toBe(true)
   })
 })

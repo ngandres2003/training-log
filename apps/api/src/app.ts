@@ -8,6 +8,7 @@ import { createUploadsRouter } from './uploads/router.js'
 import { createAccountRouter } from './account/router.js'
 import { adminEmailsFromEnv, isAdminEmail } from './auth/admins.js'
 import { createInvitesRouter } from './invites/router.js'
+import { createPushRouter } from './push/router.js'
 
 export { requireSession, sessionOf }
 
@@ -56,6 +57,7 @@ export function createApp(deps: AppDeps = {}): Express {
   app.use('/api/sync', createSyncRouter({ getDb, requireSession: auth }))
   app.use('/api/uploads', createUploadsRouter({ getAuth }))
   app.use('/api/invites', createInvitesRouter({ getDb, getAuth, requireSession: auth, getAdminEmails }))
+  app.use('/api/push', createPushRouter({ getDb, requireSession: auth }))
   app.use('/api/account', createAccountRouter({ getDb, getAuth, requireSession: auth }))
 
   app.use('/api', (_req, res) => {

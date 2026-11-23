@@ -73,6 +73,37 @@ body {
 }
 
 /*
+ * Native feel on phones: no pull-to-refresh or rubber-band on the page, no grey tap flash, no
+ * double-tap zoom delay, and no horizontal page scroll if something overflows.
+ */
+html,
+body {
+  overscroll-behavior-y: none;
+  overflow-x: clip;
+}
+html {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+/* iOS zooms into any field under 16px when it gets focus. */
+input,
+select,
+textarea {
+  font-size: max(16px, 1em);
+}
+/* While a layer (useLayer) is open the page behind stays put; scrolling layers keep their bounce to themselves. */
+html.layer-open,
+html.layer-open body {
+  overflow: hidden;
+}
+[role='dialog'],
+[role='alertdialog'],
+[role='dialog'] *,
+[role='alertdialog'] * {
+  overscroll-behavior: contain;
+}
+
+/*
  * Motion: short, eased transitions for things that appear (sheets, the active workout, the set
  * stepper) and a small "pop" when a set is checked. Everything is off with reduced motion.
  */

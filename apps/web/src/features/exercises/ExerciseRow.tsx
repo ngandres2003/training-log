@@ -1,6 +1,6 @@
 import { MUSCLES, type Exercise } from '@training-log/domain'
 import { Check, Pencil } from 'lucide-react'
-import { useState } from 'react'
+import { memo, useState } from 'react'
 import { EquipmentIcon } from './EquipmentIcon'
 
 const MUSCLE_LABEL = new Map(MUSCLES.map((m) => [m.id, m.label]))
@@ -34,11 +34,15 @@ export type ExerciseRowProps = {
   /** "80 kg × 8" from the last local workout, if any. */
   lastTime: string | null
 } & (
-  | { mode: 'select'; selected: boolean; alreadyAdded: boolean; onToggle: () => void }
-  | { mode: 'manage'; onEdit?: () => void }
+  | { mode: 'select'; selected: boolean; alreadyAdded: boolean; onToggle: (id: Exercise['id']) => void }
+  | { mode: 'manage'; onEdit?: (exercise: Exercise) => void }
 )
 
-export function ExerciseRow(props: ExerciseRowProps) {
+/**
+ * One list row. Memoized, with callbacks that take the exercise, so checking one row of the
+ * long catalog list does not re-render the others.
+ */
+export const ExerciseRow = memo(function ExerciseRow(props: ExerciseRowProps) {
   const { exercise, lastTime } = props
   const body = (
     <>
@@ -63,9 +67,9 @@ export function ExerciseRow(props: ExerciseRowProps) {
   if (props.mode === 'select') {
     const checked = props.selected || props.alreadyAdded
     return (
-      <li>
+      <li className="[contain-intrinsic-size:auto_72px] [content-visibility:auto]">
         <label
-          className={`flex min-h-16 cursor-pointer items-center gap-3 rounded-xl border px-3 py-2 has-focus-visible:outline-2 has-focus-visible:outline-sol ${
+          className={`flex min-h-16 cursor-pointer items-center gap-3 rounded-xl border px-3 py-2 transition-colors active:bg-concreto/60 has-focus-visible:outline-2 has-focus-visible:outline-sol ${
             props.selected ? 'border-sol bg-asfalto' : 'border-concreto bg-asfalto'
           } ${props.alreadyAdded ? 'opacity-60' : ''}`}
         >
@@ -76,7 +80,7 @@ export function ExerciseRow(props: ExerciseRowProps) {
             aria-label={exercise.name}
             checked={checked}
             disabled={props.alreadyAdded}
-            onChange={props.onToggle}
+            onChange={() => props.onToggle(exercise.id)}
             className="sr-only"
           />
           {/* Check mark plus color, not color only (KTD16). */}
@@ -94,12 +98,12 @@ export function ExerciseRow(props: ExerciseRowProps) {
   }
 
   return (
-    <li className="flex min-h-16 items-center gap-3 rounded-xl border border-concreto bg-asfalto px-3 py-2">
+    <li className="flex min-h-16 [contain-intrinsic-size:auto_72px] items-center [content-visibility:auto] gap-3 rounded-xl border border-concreto bg-asfalto px-3 py-2">
       {body}
       {props.onEdit && (
         <button
           type="button"
-          onClick={props.onEdit}
+          onClick={() => props.onEdit?.(exercise)}
           aria-label={`Editar ${exercise.name}`}
           className="inline-flex min-h-12 min-w-12 items-center justify-center rounded-lg text-polvo"
         >
@@ -108,4 +112,4 @@ export function ExerciseRow(props: ExerciseRowProps) {
       )}
     </li>
   )
-}
+})

@@ -5,6 +5,7 @@ import { PageHeader } from '../../app/PageHeader'
 import { AccountSection } from './AccountSection'
 import { DataTools } from './DataTools'
 import { InviteSection } from './InviteSection'
+import { NotificationsSection } from './NotificationsSection'
 import { deleteAllMyData } from './delete-all'
 import { Section } from './Section'
 import { SettingsForm } from './SettingsForm'
@@ -43,6 +44,7 @@ export function Profile({
         <InviteSection />
         <SyncDetail />
         <SettingsForm />
+        <NotificationsSection />
         <DataTools onDeleteAll={onDeleteAll} />
         <Section title="Accesos">
           <ul className="flex flex-col">

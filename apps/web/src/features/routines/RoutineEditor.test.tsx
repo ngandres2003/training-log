@@ -64,6 +64,34 @@ describe('Crear / editar rutina (V3)', () => {
     expect(await listRoutineSets(exercises[0]!.id)).toHaveLength(3)
   })
 
+  it('asks before leaving with unsaved changes, and stays when cancelled', async () => {
+    const user = userEvent.setup()
+    const { router } = renderRoutines('/')
+    await user.click(await screen.findByRole('link', { name: 'Nueva rutina' }))
+    await user.type(await screen.findByLabelText('Nombre'), 'Torso')
+
+    await router.navigate(-1)
+    const sheet = await screen.findByRole('alertdialog', { name: '¿Descartar cambios?' })
+    await user.click(within(sheet).getByRole('button', { name: 'Cancelar' }))
+    expect(screen.getByLabelText('Nombre')).toHaveValue('Torso')
+
+    await router.navigate(-1)
+    await user.click(
+      within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Descartar' }),
+    )
+    expect(await screen.findByRole('link', { name: 'Nueva rutina' })).toBeInTheDocument()
+  })
+
+  it('leaves without asking when nothing changed', async () => {
+    const user = userEvent.setup()
+    const { router } = renderRoutines('/')
+    await user.click(await screen.findByRole('link', { name: 'Nueva rutina' }))
+    await screen.findByLabelText('Nombre')
+    await router.navigate(-1)
+    expect(await screen.findByRole('link', { name: 'Nueva rutina' })).toBeInTheDocument()
+    expect(screen.queryByRole('alertdialog')).toBeNull()
+  })
+
   it('shows targets by tracking type: weight, added load and duration', async () => {
     const user = userEvent.setup()
     picked.ids = ['cat-banca', 'cat-dominadas', 'cat-plancha']

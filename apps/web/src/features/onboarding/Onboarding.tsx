@@ -9,6 +9,7 @@ import {
   subscribeInstallGuidance,
 } from '../../pwa/install-prompt'
 import { notificationPermission, requestNotificationPermission } from '../../pwa/notify'
+import { ensurePushSubscription } from '../../pwa/push'
 import { Button } from '../../ui/Button'
 import { ChoiceGroup } from '../../ui/ChoiceGroup'
 
@@ -136,7 +137,15 @@ function InstallStep() {
       <div className="flex flex-col gap-2">
         <p className="text-polvo">Te avisamos cuando termine el descanso, aunque la pantalla esté apagada.</p>
         {permission === 'default' ? (
-          <Button variant="secondary" onClick={() => void requestNotificationPermission().then(setPermission)}>
+          <Button
+            variant="secondary"
+            onClick={() =>
+              void requestNotificationPermission().then((p) => {
+                setPermission(p)
+                if (p === 'granted') void ensurePushSubscription({ optIn: true })
+              })
+            }
+          >
             Activar notificaciones
           </Button>
         ) : (

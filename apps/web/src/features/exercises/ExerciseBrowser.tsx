@@ -1,6 +1,6 @@
-import { MUSCLES, type CustomExercise, type Equipment, type Id } from '@training-log/domain'
+import { MUSCLES, type CustomExercise, type Equipment, type Exercise, type Id } from '@training-log/domain'
 import { Plus, Search } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
 import { Button } from '../../ui/Button'
 import { isCustomExercise, useExerciseLookup } from './catalog'
 import { EQUIPMENT_LABELS, filterExercises, formatSet, lastSets } from './exercise-list'
@@ -8,6 +8,8 @@ import { ExerciseRow } from './ExerciseRow'
 import { useWeightUnit, useWorkoutTables } from './hooks'
 
 const EQUIPMENT = Object.keys(EQUIPMENT_LABELS) as Equipment[]
+/** Rows rendered at first and added per step while scrolling; the catalog has ~1,300. */
+const PAGE = 40
 const selectClass = 'min-h-12 min-w-0 flex-1 rounded-lg border border-concreto bg-asfalto px-2 text-arena'
 
 export type ExerciseBrowserProps = {
@@ -28,21 +30,63 @@ export function ExerciseBrowser(props: ExerciseBrowserProps) {
   const [equipment, setEquipment] = useState<Equipment | null>(null)
   const [mineOnly, setMineOnly] = useState(false)
 
+  // Typing stays responsive: the list follows the query a beat later.
+  const deferredQuery = useDeferredValue(query)
   const results = useMemo(
-    () => filterExercises(all, { query, muscle, equipment, mineOnly }),
-    [all, query, muscle, equipment, mineOnly],
+    () => filterExercises(all, { query: deferredQuery, muscle, equipment, mineOnly }),
+    [all, deferredQuery, muscle, equipment, mineOnly],
   )
+
+  // Incremental rendering: PAGE rows, then more as the end of the list comes near.
+  const filterKey = `${deferredQuery}|${muscle}|${equipment}|${mineOnly}`
+  const [limit, setLimit] = useState({ key: filterKey, count: PAGE })
+  if (limit.key !== filterKey) setLimit({ key: filterKey, count: PAGE })
+  const sentinel = useRef<HTMLLIElement>(null)
+  const hasMore = limit.count < results.length
+  useEffect(() => {
+    const el = sentinel.current
+    if (!el || !hasMore) return
+    if (typeof IntersectionObserver === 'undefined') {
+      setLimit((l) => ({ ...l, count: Number.POSITIVE_INFINITY }))
+      return
+    }
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) setLimit((l) => ({ ...l, count: l.count + PAGE }))
+      },
+      { rootMargin: '800px 0px' },
+    )
+    io.observe(el)
+    return () => io.disconnect()
+  }, [hasMore, limit.count])
+
+  // A new filter shows its first results, not the middle of the previous list.
+  const searchBox = useRef<HTMLDivElement>(null)
+  const firstFilter = useRef(filterKey)
+  useEffect(() => {
+    if (firstFilter.current === filterKey) return
+    firstFilter.current = filterKey
+    searchBox.current?.scrollIntoView?.({ block: 'nearest' })
+  }, [filterKey])
+
+  // Sets, so each row checks its state in O(1) instead of scanning the arrays.
+  const selectedIds = props.mode === 'select' ? props.selectedIds : undefined
+  const excludeIds = props.mode === 'select' ? props.excludeIds : undefined
+  const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds])
+  const excludedSet = useMemo(() => new Set(excludeIds), [excludeIds])
+  const shown = hasMore ? results.slice(0, limit.count) : results
   const last = useMemo(() => lastSets(tables, byId), [tables, byId])
   const trimmed = query.trim()
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="relative">
+      <div ref={searchBox} className="relative scroll-mt-20">
         <Search aria-hidden="true" className="pointer-events-none absolute top-1/2 left-3 size-5 -translate-y-1/2 text-polvo" />
         <input
           type="search"
           aria-label="Buscar ejercicio"
           placeholder="Buscar ejercicio"
+          enterKeyHint="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           className="min-h-12 w-full rounded-lg border border-concreto bg-asfalto pr-3 pl-10 text-arena placeholder:text-polvo"
@@ -119,7 +163,7 @@ export function ExerciseBrowser(props: ExerciseBrowserProps) {
       )}
 
       <ul className="flex flex-col gap-2">
-        {results.map((exercise) => {
+        {shown.map((exercise) => {
           const set = last.get(exercise.id)
           const lastTime = set ? formatSet(set, exercise.trackingType, unit) : null
           if (props.mode === 'select') {
@@ -129,9 +173,9 @@ export function ExerciseBrowser(props: ExerciseBrowserProps) {
                 mode="select"
                 exercise={exercise}
                 lastTime={lastTime}
-                selected={props.selectedIds.includes(exercise.id)}
-                alreadyAdded={props.excludeIds.includes(exercise.id)}
-                onToggle={() => props.onToggle(exercise.id)}
+                selected={selectedSet.has(exercise.id)}
+                alreadyAdded={excludedSet.has(exercise.id)}
+                onToggle={props.onToggle}
               />
             )
           }
@@ -142,10 +186,11 @@ export function ExerciseBrowser(props: ExerciseBrowserProps) {
               mode="manage"
               exercise={exercise}
               lastTime={lastTime}
-              onEdit={isCustomExercise(exercise) ? () => onEdit(exercise) : undefined}
+              onEdit={isCustomExercise(exercise) ? (onEdit as (e: Exercise) => void) : undefined}
             />
           )
         })}
+        {hasMore && <li ref={sentinel} aria-hidden="true" className="h-px" />}
       </ul>
     </div>
   )

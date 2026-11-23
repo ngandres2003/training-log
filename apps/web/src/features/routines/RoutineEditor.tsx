@@ -1,8 +1,8 @@
 import type { Id, SetType, TrackingType, WeightUnit } from '@training-log/domain'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { GripVertical, X } from 'lucide-react'
-import { useEffect, useId, useState, type PointerEvent as ReactPointerEvent } from 'react'
-import { useNavigate, useParams } from 'react-router'
+import { useEffect, useId, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
+import { useBlocker, useNavigate, useParams } from 'react-router'
 import { PageHeader } from '../../app/PageHeader'
 import { listFolders } from '../../data/repositories/folders'
 import { DEFAULT_SETTINGS, getSettings } from '../../data/repositories/settings'
@@ -10,6 +10,7 @@ import { Button } from '../../ui/Button'
 import { useExerciseLookup } from '../exercises/catalog'
 import { ExercisePicker } from '../exercises/ExercisePicker'
 import { BackLink } from './components/BackLink'
+import { ConfirmSheet } from './components/Sheet'
 import type { HomeLocationState } from './Home'
 import {
   emptyDraft,
@@ -70,6 +71,8 @@ export function RoutineEditor() {
   const folders = useLiveQuery(listFolders, [], [])
   const { byId } = useExerciseLookup()
   const [draft, setDraft] = useState<RoutineDraft | null>(routineId ? null : emptyDraft())
+  /** The draft as loaded (or empty), to tell whether leaving would lose changes. */
+  const [pristine, setPristine] = useState(() => (routineId ? null : JSON.stringify(draft)))
   const [missing, setMissing] = useState(false)
   const [picking, setPicking] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -85,7 +88,10 @@ export function RoutineEditor() {
       const unit = (await getSettings())?.unit ?? DEFAULT_SETTINGS.unit
       const loaded = await loadDraft(routineId, unit)
       if (!alive) return
-      if (loaded) setDraft(loaded)
+      if (loaded) {
+        setDraft(loaded)
+        setPristine(JSON.stringify(loaded))
+      }
       else setMissing(true)
     })()
     return () => {
@@ -93,12 +99,31 @@ export function RoutineEditor() {
     }
   }, [routineId])
 
+  /** Set by the Descartar button, which already says what it does. */
+  const discarding = useRef(false)
+  const dirty = draft !== null && pristine !== null && !saving && JSON.stringify(draft) !== pristine
+  // Leaving the editor (Back, a tab, Cancelar) with unsaved changes asks first.
+  const blocker = useBlocker(
+    ({ currentLocation, nextLocation }) =>
+      dirty && !discarding.current && currentLocation.pathname !== nextLocation.pathname,
+  )
+
   const exerciseName = (id: Id) => byId.get(id)?.name ?? 'Ejercicio'
   const trackingOf = (id: Id): TrackingType => byId.get(id)?.trackingType ?? 'weight_reps'
 
   const moveExercise = (from: number, to: number) =>
     setDraft((d) => (d ? { ...d, exercises: moveItem(d.exercises, from, to) } : d))
   const startDrag = dragReorder(moveExercise)
+
+  const leaveSheet = blocker.state === 'blocked' && (
+    <ConfirmSheet
+      title="¿Descartar cambios?"
+      description="Has hecho cambios en esta rutina que no se han guardado."
+      confirmLabel="Descartar"
+      onConfirm={() => blocker.proceed()}
+      onCancel={() => blocker.reset()}
+    />
+  )
 
   if (missing) {
     return (
@@ -253,7 +278,14 @@ export function RoutineEditor() {
         </Button>
 
         <div className="sticky bottom-0 flex gap-2 bg-hierro py-2">
-          <Button variant="ghost" className="flex-1" onClick={() => void navigate(backTo)}>
+          <Button
+            variant="ghost"
+            className="flex-1"
+            onClick={() => {
+              discarding.current = true
+              void navigate(backTo)
+            }}
+          >
             Descartar
           </Button>
           <Button type="submit" className="flex-1" disabled={!draft.name.trim() || saving}>
@@ -274,6 +306,7 @@ export function RoutineEditor() {
           />
         </div>
       )}
+      {leaveSheet}
     </>
   )
 }
@@ -322,7 +355,7 @@ function ExerciseCard({
           type="button"
           aria-label="Arrastrar para reordenar"
           onPointerDown={onDragStart}
-          className="inline-flex min-h-12 min-w-10 cursor-grab touch-none items-center justify-center text-polvo"
+          className="inline-flex min-h-12 min-w-12 cursor-grab touch-none items-center justify-center text-polvo"
         >
           <GripVertical aria-hidden="true" className="size-5" />
         </button>

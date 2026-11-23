@@ -63,7 +63,11 @@ export function RestSetting({
       </button>
 
       {open && (
-        <Sheet title="Descanso entre series" description={`Tras cada serie de ${exerciseName}.`}>
+        <Sheet
+          title="Descanso entre series"
+          description={`Tras cada serie de ${exerciseName}.`}
+          onClose={() => setOpen(false)}
+        >
           <NumberStepper
             label="descanso"
             value={value ? restClock(value * 1000) : 'Sin descanso'}

@@ -1,4 +1,20 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+
+const push = vi.hoisted(() => ({
+  active: false,
+  scheduleOk: true,
+  scheduled: [] as { id: string; at: number; title: string; body: string }[],
+  cancelled: [] as string[],
+}))
+
+vi.mock('./push', () => ({
+  pushActive: () => push.active,
+  scheduleServerRest: async (input: (typeof push.scheduled)[number]) => {
+    push.scheduled.push(input)
+    return push.scheduleOk
+  },
+  cancelServerRest: (id: string) => push.cancelled.push(id),
+}))
 import { remainingRestMs, restEnded, scheduleRestEnd } from './notify'
 
 describe('remainingRestMs', () => {
@@ -117,5 +133,55 @@ describe('scheduleRestEnd', () => {
 
     expect(vibrations).toEqual([])
     expect(posted.at(-1)).toEqual({ type: 'cancel-rest-end' })
+  })
+
+  describe('with a push subscription', () => {
+    beforeEach(() => {
+      push.active = true
+      push.scheduleOk = true
+      push.scheduled.length = 0
+      push.cancelled.length = 0
+      setPermission('granted')
+    })
+    afterEach(() => {
+      push.active = false
+      vi.unstubAllGlobals()
+    })
+
+    it('asks the server to push at rest end instead of the worker timer', async () => {
+      const at = restEndsAt()
+      const rest = scheduleRestEnd({ restEndsAt: at, title: 'Descanso terminado', body: 'Press banca' })
+      await vi.advanceTimersByTimeAsync(0)
+
+      expect(rest.channel).toBe('push')
+      expect(push.scheduled).toEqual([
+        { id: expect.any(String), at: Date.parse(at), title: 'Descanso terminado', body: 'Press banca' },
+      ])
+      expect(posted).toEqual([])
+    })
+
+    it('a visible page alerts itself and cancels the server push', async () => {
+      scheduleRestEnd({ restEndsAt: restEndsAt(), title: 't', body: '' })
+      await vi.advanceTimersByTimeAsync(90_000)
+
+      expect(vibrations).toEqual([[200, 100, 200]])
+      expect(push.cancelled).toEqual([push.scheduled[0]!.id])
+    })
+
+    it('falls back to the worker timer when the server cannot schedule', async () => {
+      push.scheduleOk = false
+      scheduleRestEnd({ restEndsAt: restEndsAt(), title: 't', body: '' })
+      await vi.advanceTimersByTimeAsync(0)
+
+      expect(posted).toEqual([expect.objectContaining({ type: 'schedule-rest-end' })])
+    })
+
+    it('cancelling cancels the server push', async () => {
+      const rest = scheduleRestEnd({ restEndsAt: restEndsAt(), title: 't', body: '' })
+      await vi.advanceTimersByTimeAsync(0)
+      rest.cancel()
+
+      expect(push.cancelled).toEqual([push.scheduled[0]!.id])
+    })
   })
 })

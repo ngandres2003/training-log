@@ -156,11 +156,11 @@ describe('Inicio (V1)', () => {
     expect(await getActiveWorkout()).toMatchObject({ routineId: push.id, name: 'Push', status: 'active' })
   })
 
-  it('"Empezar entreno vacío" asks first, and cancelling starts nothing', async () => {
+  it('"Entreno libre" asks first, and cancelling starts nothing', async () => {
     const user = userEvent.setup()
     renderRoutines()
 
-    await user.click(await screen.findByRole('button', { name: 'Empezar entreno vacío' }))
+    await user.click(await screen.findByRole('button', { name: 'Entreno libre' }))
     expect(await screen.findByText('¿Empezar entreno vacío?')).toBeTruthy()
     expect(await getActiveWorkout()).toBeFalsy()
 
@@ -169,11 +169,11 @@ describe('Inicio (V1)', () => {
     expect(await getActiveWorkout()).toBeFalsy()
   })
 
-  it('"Empezar entreno vacío" starts a free workout after confirming', async () => {
+  it('"Entreno libre" starts a free workout after confirming', async () => {
     const user = userEvent.setup()
     renderRoutines()
 
-    await user.click(await screen.findByRole('button', { name: 'Empezar entreno vacío' }))
+    await user.click(await screen.findByRole('button', { name: 'Entreno libre' }))
     await user.click(await screen.findByRole('button', { name: 'Empezar' }))
 
     await waitFor(async () => expect(await getActiveWorkout()).toMatchObject({ routineId: null, status: 'active' }))
