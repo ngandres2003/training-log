@@ -10,6 +10,7 @@ import { minutesText } from './format'
 import { summarize } from './session-data'
 import { renderShareImage, shareImage } from './share-image'
 import { useSession } from './use-session'
+import { useLayer } from '../../ui/layer'
 
 /** Brief celebration after V7's Guardar (spec V7, Hevy style), shareable as an image; then V1. */
 export function Celebration({ workoutId }: { workoutId: Id }) {
@@ -21,6 +22,7 @@ export function Celebration({ workoutId }: { workoutId: Id }) {
     closeCelebration()
     void navigate('/')
   }
+  useLayer(done)
 
   if (!data || !model) return <div aria-hidden="true" className="fixed inset-0 z-40 bg-hierro" />
 

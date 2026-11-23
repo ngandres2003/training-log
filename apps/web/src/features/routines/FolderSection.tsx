@@ -108,7 +108,7 @@ export function FolderSection({
       )}
 
       {renaming && (
-        <Sheet title="Renombrar carpeta">
+        <Sheet title="Renombrar carpeta" onClose={() => setRenaming(false)}>
           <form
             className="flex flex-col gap-4"
             onSubmit={(e) => {

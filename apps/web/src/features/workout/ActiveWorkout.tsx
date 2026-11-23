@@ -33,6 +33,7 @@ import {
   toggleSuperset,
   uncompleteSet,
 } from './workout-actions'
+import { useLayer } from '../../ui/layer'
 
 type Picker = { kind: 'add' } | { kind: 'replace'; workoutExerciseId: Id }
 
@@ -49,6 +50,8 @@ export function ActiveWorkout({ workoutId }: { workoutId: Id }) {
   const data = useLiveQuery(() => loadWorkoutData(workoutId), [workoutId])
   const lookup = useExerciseLookup()
   const ui = useWorkoutUi()
+  // Back minimizes the workout, like the chevron.
+  useLayer(minimizeWorkout)
   const now = useNow()
   const offline = indicatorState(useSyncSnapshot()).state === 'sin-conexion'
   const model = useMemo(() => (data ? buildWorkoutModel(data, lookup.byId) : null), [data, lookup.byId])
@@ -343,6 +346,7 @@ export function ActiveWorkout({ workoutId }: { workoutId: Id }) {
           title="¿Finalizar entreno?"
           description={`Tienes ${pendingSets} ${pendingSets === 1 ? 'serie' : 'series'} sin marcar. No contarán en el entreno.`}
           alert
+          onClose={() => setConfirm(null)}
         >
           <div className="flex gap-2">
             <Button variant="secondary" className="flex-1" autoFocus onClick={() => setConfirm(null)}>
@@ -362,7 +366,12 @@ export function ActiveWorkout({ workoutId }: { workoutId: Id }) {
       )}
 
       {confirm === 'discard' && (
-        <Sheet title="¿Descartar entreno?" description="Se perderán las series de esta sesión." alert>
+        <Sheet
+          title="¿Descartar entreno?"
+          description="Se perderán las series de esta sesión."
+          alert
+          onClose={() => setConfirm(null)}
+        >
           <div className="flex gap-2">
             <Button variant="secondary" className="flex-1" autoFocus onClick={() => setConfirm(null)}>
               Seguir entrenando

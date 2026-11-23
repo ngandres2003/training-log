@@ -95,7 +95,7 @@ function ExerciseHeader({
       )}
 
       {noteOpen && (
-        <Sheet title="Nota de hoy">
+        <Sheet title="Nota de hoy" onClose={() => setNoteOpen(false)}>
           <label className="flex flex-col gap-1 text-sm text-polvo">
             Nota para {exercise.name}
             <textarea

@@ -203,7 +203,7 @@ export function Home() {
       </p>
 
       {moving && (
-        <Sheet title={`Mover «${moving.name}» a carpeta`}>
+        <Sheet title={`Mover «${moving.name}» a carpeta`} onClose={() => setMoving(null)}>
           <div className="flex flex-col gap-2">
             {[{ id: null, name: 'Sin carpeta' }, ...folders].map((f) => (
               <Button

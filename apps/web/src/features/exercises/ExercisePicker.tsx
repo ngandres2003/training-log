@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Button } from '../../ui/Button'
 import { CreateExercise } from './CreateExercise'
 import { ExerciseBrowser } from './ExerciseBrowser'
+import { useLayer } from '../../ui/layer'
 
 /**
  * Contract for V4 in selection mode, used by V3 (routine editor) and V5 (add exercise).
@@ -20,6 +21,10 @@ export interface ExercisePickerProps {
 export function ExercisePicker({ excludeIds = [], onConfirm, onCancel }: ExercisePickerProps) {
   const [selected, setSelected] = useState<Id[]>([])
   const [creating, setCreating] = useState<{ initialName: string } | null>(null)
+
+  useLayer(onCancel)
+  // Creating an exercise is a screen of its own: Back returns to the list.
+  useLayer(() => setCreating(null), creating !== null)
 
   const toggle = (id: Id) => setSelected((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]))
 

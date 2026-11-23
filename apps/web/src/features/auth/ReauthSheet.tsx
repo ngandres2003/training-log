@@ -3,6 +3,7 @@ import type { LastKnownUser } from '../../data/db'
 import { getLastKnownUser } from '../../data/syncMeta'
 import { authApi, ensureSameUser, type AuthApi } from './auth-client'
 import { PasswordForm } from './PasswordForm'
+import { useLayer } from '../../ui/layer'
 
 export interface ReauthSheetProps {
   /** Closes the sheet; the screen underneath stays usable and logging keeps working (R5). */
@@ -20,6 +21,7 @@ export interface ReauthSheetProps {
  * screen, asking for the password with the email locked to the last known user.
  */
 export function ReauthSheet({ onDismiss, onSignedIn, api = authApi }: ReauthSheetProps) {
+  useLayer(onDismiss)
   const titleId = useId()
   const [known, setKnown] = useState<LastKnownUser | null>(null)
 
