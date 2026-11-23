@@ -26,8 +26,9 @@ export default defineConfig({
         scope: '/',
         display: 'standalone',
         orientation: 'portrait',
-        background_color: '#0e0e0c',
-        theme_color: '#0e0e0c',
+        // The light theme is the default: the launch splash and system bars match it.
+        background_color: '#f3f4f6',
+        theme_color: '#f3f4f6',
         icons: [
           { src: '/pwa-192x192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
           { src: '/pwa-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },

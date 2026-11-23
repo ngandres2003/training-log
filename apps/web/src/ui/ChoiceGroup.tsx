@@ -22,13 +22,19 @@ export function ChoiceGroup<V extends string | number>({ label, choices, value, 
   return (
     <fieldset className="flex flex-col gap-2">
       <legend className="mb-2 text-sm text-polvo">{label}</legend>
-      <div role="radiogroup" aria-label={label} className="flex gap-2">
+      {/* A grid so 7 options (days per week) fit a 360px phone without overflowing. */}
+      <div
+        role="radiogroup"
+        aria-label={label}
+        className="grid gap-1.5"
+        style={{ gridTemplateColumns: `repeat(${choices.length}, minmax(0, 1fr))` }}
+      >
         {choices.map((c) => {
           const checked = c.value === value
           return (
             <label
               key={String(c.value)}
-              className={`flex min-h-12 min-w-12 flex-1 cursor-pointer items-center justify-center rounded-lg border px-2 has-focus-visible:outline-2 has-focus-visible:outline-sol ${
+              className={`flex min-h-12 min-w-0 cursor-pointer items-center justify-center rounded-lg border px-1 transition-transform active:scale-95 has-focus-visible:outline-2 has-focus-visible:outline-sol ${
                 checked ? 'border-sol bg-sol font-bold text-tinta' : 'border-concreto bg-asfalto text-arena'
               }`}
             >
