@@ -9,7 +9,7 @@ const TABS: { to: string; label: string; Icon: LucideIcon; end?: boolean }[] = [
 ]
 
 const tabClass = (active: boolean) =>
-  `flex min-h-14 flex-col items-center justify-center gap-0.5 border-t-2 text-xs transition-colors duration-200 ${
+  `flex min-h-14 flex-col items-center justify-center gap-0.5 border-t-2 text-xs transition-[color,background-color,transform] duration-200 active:scale-95 active:bg-concreto/40 ${
     active ? 'border-sol font-bold text-acento' : 'border-transparent text-polvo'
   }`
 
