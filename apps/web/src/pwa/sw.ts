@@ -110,8 +110,11 @@ self.addEventListener('notificationclick', (event) => {
   event.notification.close()
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windows) => {
+      // Rest-end alerts take the user back to the workout, not just to the app.
       const existing = windows[0]
-      return existing ? existing.focus() : self.clients.openWindow('/')
+      if (!existing) return self.clients.openWindow('/?entreno=1')
+      existing.postMessage({ type: 'open-workout' })
+      return existing.focus()
     }),
   )
 })
