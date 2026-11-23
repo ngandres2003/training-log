@@ -1,6 +1,6 @@
 import type { Id } from '@training-log/domain'
 import { X } from 'lucide-react'
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { Button } from '../../ui/Button'
 import { CreateExercise } from './CreateExercise'
 import { ExerciseBrowser } from './ExerciseBrowser'
@@ -26,7 +26,10 @@ export function ExercisePicker({ excludeIds = [], onConfirm, onCancel }: Exercis
   // Creating an exercise is a screen of its own: Back returns to the list.
   useLayer(() => setCreating(null), creating !== null)
 
-  const toggle = (id: Id) => setSelected((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]))
+  const toggle = useCallback(
+    (id: Id) => setSelected((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id])),
+    [],
+  )
 
   return (
     <div
