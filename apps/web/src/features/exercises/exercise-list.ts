@@ -10,6 +10,7 @@ import {
   type WorkoutSet,
   type WorkoutTables,
 } from '@training-log/domain'
+import { basicRank } from './basics'
 import { isCustomExercise } from './catalog'
 
 export const EQUIPMENT_LABELS: Record<Equipment, string> = {
@@ -41,7 +42,8 @@ export interface ExerciseFilters {
 
 /**
  * Every word of the query must appear in the Spanish name or the catalog's English alias,
- * so "press banca" matches "Press de banca con barra". Sorted by name.
+ * so "press banca" matches "Press de banca con barra". The basic exercises (`basics.ts`) come
+ * first in their curated order; everything else follows, sorted by name.
  */
 export function filterExercises(all: Exercise[], f: ExerciseFilters): Exercise[] {
   const words = normalize(f.query).split(/\s+/).filter(Boolean)
@@ -54,7 +56,12 @@ export function filterExercises(all: Exercise[], f: ExerciseFilters): Exercise[]
       const haystack = normalize(`${e.name} ${'nameEn' in e ? String(e.nameEn) : ''}`)
       return words.every((w) => haystack.includes(w))
     })
-    .sort((a, b) => a.name.localeCompare(b.name, 'es'))
+    .sort((a, b) => {
+      const ra = basicRank(a.id) ?? Infinity
+      const rb = basicRank(b.id) ?? Infinity
+      if (ra !== rb) return ra - rb
+      return a.name.localeCompare(b.name, 'es')
+    })
 }
 
 // A routine id no workout has, so `otherRoutineChip` considers every session.
