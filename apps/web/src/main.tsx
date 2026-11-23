@@ -1,7 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { RouterProvider } from 'react-router'
-import { Intro } from './app/intro/Intro'
+import { Intro, shouldPlayIntro } from './app/intro/Intro'
 import { createAppRouter } from './app/router'
 import './features/workout/register'
 import { captureInstallPrompt } from './pwa/install-prompt'
@@ -21,11 +21,12 @@ if (import.meta.env.PROD) {
 }
 
 const router = createAppRouter()
+const playIntro = shouldPlayIntro()
 
 createRoot(root).render(
   <StrictMode>
     <ThemeSync />
     <RouterProvider router={router} />
-    <Intro />
+    {playIntro && <Intro />}
   </StrictMode>,
 )
