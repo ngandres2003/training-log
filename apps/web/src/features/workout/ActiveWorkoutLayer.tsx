@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { remainingRestMs, scheduleRestEnd } from '../../pwa/notify'
+import { ensurePushSubscription, pushActive } from '../../pwa/push'
 import { Celebration } from '../sessions/Celebration'
 import { FinishWorkout } from '../sessions/FinishWorkout'
 import { ActiveWorkout } from './ActiveWorkout'
@@ -50,6 +51,11 @@ function RestEndAlert({ restEndsAt, body }: { restEndsAt: string | null; body: s
   // Derived from the previous render (React's "adjust state while rendering" pattern).
   if (restEndsAt && remaining > 0 && running !== restEndsAt) setRunning(restEndsAt)
   if (restEndsAt && remaining === 0 && running === restEndsAt && ended !== restEndsAt) setEnded(restEndsAt)
+
+  // A workout is a good moment to make sure the push subscription is live (e.g. signed in after start).
+  useEffect(() => {
+    if (!pushActive()) void ensurePushSubscription()
+  }, [])
 
   useEffect(() => {
     if (!restEndsAt || remainingRestMs(restEndsAt, Date.now()) === 0) return

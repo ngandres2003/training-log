@@ -5,6 +5,7 @@ import { Intro } from './app/intro/Intro'
 import { createAppRouter } from './app/router'
 import './features/workout/register'
 import { captureInstallPrompt } from './pwa/install-prompt'
+import { ensurePushSubscription } from './pwa/push'
 import { registerServiceWorker } from './pwa/register'
 import './ui/theme.css'
 import { ThemeSync } from './ui/theme'
@@ -13,7 +14,11 @@ const root = document.getElementById('root')
 if (!root) throw new Error('root element missing')
 
 captureInstallPrompt()
-if (import.meta.env.PROD) registerServiceWorker()
+if (import.meta.env.PROD) {
+  registerServiceWorker()
+  // Re-registers this device's push subscription (no-op without permission or session).
+  void ensurePushSubscription()
+}
 
 const router = createAppRouter()
 

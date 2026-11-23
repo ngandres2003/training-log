@@ -47,7 +47,7 @@ Sign-in is email + password (Better Auth). Nobody can sign up on their own: an a
    DATABASE_URL="<connection string>" npx drizzle-kit migrate
    ```
 
-   Run it against the production database before the first release, and again whenever a change adds a migration (the latest is `0003_invites.sql`, which adds the server-only `invites` table). A preview branch starts as a copy of its parent, so a pull request that adds a migration must also apply it to its preview branch (take the connection string from the Neon console or from the preview's environment variables). The repository does not run migrations during the build.
+   Run it against the production database before the first release, and again whenever a change adds a migration (the latest is `0004_push.sql`, which adds the server-only `push_subscriptions` and `rest_alerts` tables). A preview branch starts as a copy of its parent, so a pull request that adds a migration must also apply it to its preview branch (take the connection string from the Neon console or from the preview's environment variables). The repository does not run migrations during the build.
 
 ## 3. Environment variables
 
@@ -60,6 +60,9 @@ Set these in Vercel → Settings → Environment Variables. The API reads them; 
 | `BETTER_AUTH_URL`       | Production only     | The public origin, e.g. `https://training-log.example.com`. Leave it unset for Preview: each preview has its own URL, and without it Better Auth derives the origin from the request. | `src/auth/auth.ts`                               |
 | `ADMIN_EMAILS`          | Production, Preview | Comma-separated emails that may generate invite links, e.g. `tu@email.com`. Checked on the server on every request; case-insensitive.                                                 | `src/auth/admins.ts`, `src/app.ts`               |
 | `BLOB_READ_WRITE_TOKEN` | Production, Preview | Set by connecting a Vercel Blob store (next section).                                                                                                                                 | `src/uploads/router.ts`, `src/account/router.ts` |
+| `VAPID_PUBLIC_KEY`      | Production, Preview | Web Push key pair for rest-end notifications. Generate once with `pnpm --filter api exec web-push generate-vapid-keys` and use the same pair everywhere (changing it makes every device re-subscribe). Without it, `/api/push` answers 503 and the app keeps its in-page alerts. | `src/push/push.ts` |
+| `VAPID_PRIVATE_KEY`     | Production, Preview | The private half of that pair. Keep it secret; it also signs the API's internal relay for rests longer than 4 minutes. | `src/push/push.ts`, `src/push/router.ts` |
+| `VAPID_SUBJECT`         | Production, Preview | `mailto:you@example.com` or an `https:` URL the push services can contact. Optional: defaults to `BETTER_AUTH_URL`. Apple rejects `localhost`. | `src/push/push.ts` |
 
 Set by Vercel, not by you:
 

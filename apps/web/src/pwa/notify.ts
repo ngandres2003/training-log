@@ -6,9 +6,11 @@
  * timers, so the UI recomputes on return.
  *
  * At rest end the page vibrates and plays a short tone. When notification permission is
- * granted and a service worker controls the page, the worker also shows a notification
- * at `restEndsAt` if the page is hidden at that moment and the worker is still alive.
+ * granted and this device has a push subscription (push.ts), the server sends a Web Push at
+ * `restEndsAt` unless the visible page cancels it first. Without push, a controlling service
+ * worker shows the notification from a timer, which only works while the browser keeps it alive.
  */
+import { cancelServerRest, pushActive, scheduleServerRest } from './push'
 
 /** Milliseconds of rest left; 0 when the rest has ended or none is running. */
 export function remainingRestMs(restEndsAt: string | null, now: number): number {
@@ -25,7 +27,7 @@ export type RestEndMessage =
   | { type: 'schedule-rest-end'; at: number; title: string; body: string }
   | { type: 'cancel-rest-end' }
 
-export type RestEndChannel = 'service-worker' | 'in-page'
+export type RestEndChannel = 'push' | 'service-worker' | 'in-page'
 
 export interface ScheduledRestEnd {
   /** Where the hidden-page alert comes from; the visible page always vibrates and beeps. */
@@ -118,23 +120,50 @@ export function scheduleRestEnd(
   primeAudio()
 
   const at = Date.parse(input.restEndsAt)
-  const channel: RestEndChannel =
-    notificationPermission() === 'granted' &&
-    postToWorker({ type: 'schedule-rest-end', at, title: input.title, body: input.body })
-      ? 'service-worker'
-      : 'in-page'
+  const granted = notificationPermission() === 'granted'
+  const scheduleWorker = () => postToWorker({ type: 'schedule-rest-end', at, title: input.title, body: input.body })
+
+  let channel: RestEndChannel = 'in-page'
+  let serverId: string | null = null
+  if (granted && pushActive()) {
+    // The server push reaches a locked phone; if it cannot be scheduled, fall back to the worker.
+    channel = 'push'
+    const id = newRestId()
+    serverId = id
+    void scheduleServerRest({ id, at, title: input.title, body: input.body }).then((ok) => {
+      if (!ok && serverId === id) {
+        serverId = null
+        scheduleWorker()
+      }
+    })
+  } else if (granted && scheduleWorker()) {
+    channel = 'service-worker'
+  }
 
   const timer = setTimeout(() => {
-    // When hidden with a worker notification pending, the worker alerts instead.
+    // When hidden with a notification pending, the worker or the push alerts instead.
     const hidden = typeof document !== 'undefined' && document.visibilityState === 'hidden'
-    if (channel === 'in-page' || !hidden) playRestEndAlert()
+    if (channel === 'in-page' || !hidden) {
+      playRestEndAlert()
+      // Visible: the server holds its push for a short grace, so cancelling now prevents a duplicate.
+      if (serverId) cancelServerRest(serverId)
+      serverId = null
+    }
   }, remainingRestMs(input.restEndsAt, now))
 
   return {
     channel,
     cancel: () => {
       clearTimeout(timer)
-      if (channel === 'service-worker') postToWorker({ type: 'cancel-rest-end' })
+      if (serverId) cancelServerRest(serverId)
+      serverId = null
+      postToWorker({ type: 'cancel-rest-end' })
     },
   }
+}
+
+function newRestId(): string {
+  return typeof crypto !== 'undefined' && 'randomUUID' in crypto
+    ? crypto.randomUUID()
+    : `${Date.now()}-${Math.random().toString(36).slice(2)}`
 }
