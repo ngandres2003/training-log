@@ -68,7 +68,8 @@ export function shouldPlayIntro(now = Date.now()): boolean {
   if (prefersReducedMotion()) return false
   try {
     const last = Number(localStorage.getItem(SEEN_KEY))
-    if (last && now - last < DAY_MS) return false
+    // A last time in the future (clock moved back) does not count.
+    if (last && now - last >= 0 && now - last < DAY_MS) return false
     localStorage.setItem(SEEN_KEY, String(now))
   } catch {
     // No storage (private mode): play it, as before.
