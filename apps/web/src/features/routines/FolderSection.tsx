@@ -88,7 +88,7 @@ export function FolderSection({
               info,
               folder.isCycle ? i + 1 : undefined,
               reordering ? (
-                <div className="flex gap-2 pr-3">
+                <div className="flex gap-2">
                   <Button variant="secondary" disabled={i === 0} onClick={() => void move(i, i - 1)}>
                     Subir
                   </Button>
