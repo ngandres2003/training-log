@@ -1,6 +1,6 @@
 import { formatWeight, type Id } from '@training-log/domain'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ChevronDown, ChevronLeft, ChevronRight, Plus } from 'lucide-react'
+import { ChevronDown, Plus } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSyncSnapshot, SyncIndicator } from '../../app/SyncIndicator'
 import { indicatorState } from '../../data/sync/status'
@@ -62,6 +62,10 @@ export function ActiveWorkout({ workoutId }: { workoutId: Id }) {
   const slides = useRef<(HTMLElement | null)[]>([])
   const carousel = useRef<HTMLDivElement>(null)
   const follow = useRef<'next' | 'last' | null>(null)
+  // Slide a button/✓ is gliding to. While set, the scroll positions passed on the way don't move
+  // the highlight (it would flash through every slide in between); the user touching the carousel
+  // or the glide ending releases it.
+  const gliding = useRef<number | null>(null)
 
   const keepScreenOn = data?.settings.keepScreenOn ?? true
   useEffect(() => (keepScreenOn ? keepScreenAwake() : undefined), [keepScreenOn])
@@ -69,8 +73,24 @@ export function ActiveWorkout({ workoutId }: { workoutId: Id }) {
   const blockCount = model?.blocks.length ?? 0
   const goTo = (i: number) => {
     const target = Math.max(0, Math.min(i, blockCount - 1))
+    const el = carousel.current
+    const slide = slides.current[target]
     setCurrent(target)
-    slides.current[target]?.scrollIntoView?.({ behavior: 'smooth', inline: 'center', block: 'nearest' })
+    if (!el || !slide) return
+    // Scroll only the carousel (scrollIntoView would also nudge any scrollable ancestor), centring
+    // the slide like its snap point does. 'auto' follows the carousel's CSS scroll-behavior:
+    // smooth, or instant with reduced motion.
+    const left =
+      el.scrollLeft +
+      slide.getBoundingClientRect().left -
+      el.getBoundingClientRect().left -
+      (el.clientWidth - slide.offsetWidth) / 2
+    const max = el.scrollWidth - el.clientWidth
+    const clamped = Math.max(0, Math.min(left, max))
+    if (Math.abs(clamped - el.scrollLeft) < 1) return
+    gliding.current = target
+    if (typeof el.scrollTo === 'function') el.scrollTo({ left: clamped, behavior: 'auto' })
+    else el.scrollLeft = clamped
   }
 
   // After ✓ follow the next pending set to its slide; after adding exercises show the last one.
@@ -123,12 +143,45 @@ export function ActiveWorkout({ workoutId }: { workoutId: Id }) {
     else onFinishRequested(workoutId)
   }
 
-  const onScroll = () => {
+  /** Fractional slide index at the carousel's centre (0 = first slide centred). */
+  const scrollPosition = () => {
     const el = carousel.current
     const first = slides.current[0]
-    if (!el || !first || first.offsetWidth === 0) return
-    const i = Math.round(el.scrollLeft / (first.offsetWidth + 12))
-    if (i !== current) setCurrent(Math.max(0, Math.min(i, blockCount - 1)))
+    if (!el || !first || first.offsetWidth === 0) return null
+    const second = slides.current[1]
+    const stride = second ? second.offsetLeft - first.offsetLeft : first.offsetWidth
+    if (stride <= 0) return null
+    const firstCentre =
+      el.scrollLeft + first.getBoundingClientRect().left - el.getBoundingClientRect().left + first.offsetWidth / 2
+    return (el.scrollLeft + el.clientWidth / 2 - firstCentre) / stride
+  }
+
+  const onScroll = () => {
+    const pos = scrollPosition()
+    if (pos == null) return
+    const nearest = Math.max(0, Math.min(Math.round(pos), blockCount - 1))
+    if (gliding.current != null) {
+      // Programmatic glide: hold the highlight on its destination until it gets there.
+      if (nearest === gliding.current) gliding.current = null
+      return
+    }
+    // A little hysteresis around the halfway point, so a finger resting there doesn't make the
+    // two slides flicker between highlighted and receded. Snapping always lands on a whole index,
+    // so the final slide is always picked up.
+    if (nearest !== current && Math.abs(pos - current) > 0.6) setCurrent(nearest)
+  }
+
+  const onScrollEnd = () => {
+    gliding.current = null
+    const pos = scrollPosition()
+    if (pos == null) return
+    const nearest = Math.max(0, Math.min(Math.round(pos), blockCount - 1))
+    if (nearest !== current) setCurrent(nearest)
+  }
+
+  // The user taking over mid-glide: follow their finger again.
+  const releaseGlide = () => {
+    gliding.current = null
   }
 
   const showRest = ui.restOpen && resting
@@ -234,6 +287,10 @@ export function ActiveWorkout({ workoutId }: { workoutId: Id }) {
             <div
               ref={carousel}
               onScroll={onScroll}
+              onScrollEnd={onScrollEnd}
+              onPointerDown={releaseGlide}
+              onTouchStart={releaseGlide}
+              onWheel={releaseGlide}
               aria-label="Ejercicios"
               role="region"
               className="scrollbar-none flex min-h-0 flex-1 snap-x snap-mandatory items-start gap-3 overflow-x-auto overscroll-x-contain scroll-smooth px-4 py-2"
@@ -281,25 +338,9 @@ export function ActiveWorkout({ workoutId }: { workoutId: Id }) {
               </div>
             ) : (
               <div key="nav" className="flex flex-1 animate-rise items-center gap-2">
-                <Button
-                  variant="ghost"
-                  aria-label="Ejercicio anterior"
-                  disabled={empty || current === 0}
-                  onClick={() => goTo(current - 1)}
-                >
-                  <ChevronLeft aria-hidden="true" className="size-6" />
-                </Button>
                 <Button variant="secondary" className="flex-1 uppercase" onClick={() => setPicker({ kind: 'add' })}>
                   <Plus aria-hidden="true" className="size-5" />
                   Añadir ejercicio
-                </Button>
-                <Button
-                  variant="ghost"
-                  aria-label="Ejercicio siguiente"
-                  disabled={empty || current >= blockCount - 1}
-                  onClick={() => goTo(current + 1)}
-                >
-                  <ChevronRight aria-hidden="true" className="size-6" />
                 </Button>
               </div>
             )}
