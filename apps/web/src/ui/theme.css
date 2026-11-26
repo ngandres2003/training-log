@@ -91,9 +91,13 @@ select,
 textarea {
   font-size: max(16px, 1em);
 }
-/* While a layer (useLayer) is open the page behind stays put; scrolling layers keep their bounce to themselves. */
-html.layer-open,
-html.layer-open body {
+/*
+ * While a layer (useLayer) is open the page behind stays put; scrolling layers keep their bounce to
+ * themselves. Lock the root only: `overflow: hidden` on body would make body a scroll container,
+ * so the sticky tab bar would stick to body (as tall as the page) instead of the viewport and drop
+ * to the end of the page, dragging the scroll with it whenever the page was not already there.
+ */
+html.layer-open {
   overflow: hidden;
 }
 [role='dialog'],

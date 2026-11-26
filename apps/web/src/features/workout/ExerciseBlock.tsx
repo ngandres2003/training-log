@@ -251,7 +251,7 @@ export const ExerciseBlock = forwardRef<
       className={`flex flex-col gap-3 rounded-2xl border bg-asfalto p-3 transition-[opacity,transform,border-color,box-shadow] duration-300 ease-suave ${
         stacked
           ? 'w-full border-borde-fuerte'
-          : `scrollbar-none max-h-full ${count === 1 ? 'w-full' : 'w-[calc(100%-1.75rem)]'} shrink-0 snap-center overflow-y-auto ${
+          : `scrollbar-none max-h-full ${count === 1 ? 'w-full' : 'w-[calc(100%-1.75rem)]'} shrink-0 snap-center snap-always overflow-y-auto ${
               current
                 ? 'neon'
                 : 'neon-soft scale-[0.96] opacity-50'
